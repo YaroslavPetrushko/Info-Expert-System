@@ -209,7 +209,7 @@ public class MainViewModel : INotifyPropertyChanged
     public string ReferenceDimensionsText =>
         (ReferenceWidth.HasValue && ReferenceHeight.HasValue)
             ? $"{ReferenceWidth.Value} × {ReferenceHeight.Value} px"
-            : "Ще не визначено (завантажте перше зображення)";
+            : "Ще не визначено";
 
     /// <summary>
     /// Статус завантаження класів: "Завантажено зображень: X з M".
