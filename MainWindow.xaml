@@ -6,26 +6,88 @@
         xmlns:vm="clr-namespace:Info_Extreme_System.ViewModels"
         mc:Ignorable="d"
         Title="ІЕІТ — Система розпізнавання образів (Лабораторна робота №12)"
-        Height="840" Width="1320"
-        MinHeight="720" MinWidth="1100"
+        Height="860" Width="1340"
+        MinHeight="720" MinWidth="1120"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI"
         FontSize="13"
-        Background="#F4F6F9">
+        Background="#F8FAFC">
 
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
 
     <Window.Resources>
-        <!-- Card Style -->
+        <!-- VECTOR ICON GEOMETRIES (Minimalist, Monochrome, High-Clarity) -->
+        <Geometry x:Key="IconSliders">M4 21v-7 M4 10V3 M12 21v-9 M12 8V3 M20 21v-5 M20 12V3 M1 14h6 M9 8h6 M17 16h6</Geometry>
+        <Geometry x:Key="IconRocket">M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z</Geometry>
+        <Geometry x:Key="IconPlus">M12 5v14 M5 12h14</Geometry>
+        <Geometry x:Key="IconFolder">M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z</Geometry>
+        <Geometry x:Key="IconTrash">M3 6h18 M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2 M10 11v6 M14 11v6</Geometry>
+        <Geometry x:Key="IconChart">M18 20V10 M12 20V4 M6 20v-6</Geometry>
+        <Geometry x:Key="IconList">M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8</Geometry>
+        <Geometry x:Key="IconImage">M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z M8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3z M21 15l-5-5L5 21</Geometry>
+        <Geometry x:Key="IconSearch">M11 19a8 8 0 100-16 8 8 0 000 16z M21 21l-4.35-4.35</Geometry>
+        <Geometry x:Key="IconClose">M18 6L6 18 M6 6l12 12</Geometry>
+        <Geometry x:Key="IconGrid">M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18</Geometry>
+        <Geometry x:Key="IconLayers">M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5</Geometry>
+        <Geometry x:Key="IconNodes">M18 7a3 3 0 100-6 3 3 0 000 6z M6 21a3 3 0 100-6 3 3 0 000 6z M18 21a3 3 0 100-6 3 3 0 000 6z M8.5 19.5h6.5 M15.5 7.5l-7 10</Geometry>
+        <Geometry x:Key="IconTarget">M12 22a10 10 0 100-20 10 10 0 000 20z M12 18a6 6 0 100-12 6 6 0 000 12z M12 14a2 2 0 100-4 2 2 0 000 4z</Geometry>
+
+        <!-- Modern Card Style (from MAI project reference) -->
         <Style x:Key="CardBorderStyle" TargetType="Border">
-            <Setter Property="Background" Value="White" />
+            <Setter Property="Background" Value="#FFFFFF" />
             <Setter Property="BorderBrush" Value="#E2E8F0" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="14" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="16" />
             <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Direction="270" Color="#0F172A" Opacity="0.04" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern TabItem Style (from MAI project reference) -->
+        <Style TargetType="TabItem">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="18,10" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder"
+                                Background="#E2E8F0"
+                                Margin="0,0,6,0"
+                                CornerRadius="8,8,0,0"
+                                Padding="{TemplateBinding Padding}"
+                                BorderThickness="1,1,1,0"
+                                BorderBrush="#CBD5E1">
+                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#FFFFFF" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#CBD5E1" />
+                                <Setter Property="Foreground" Value="#2563EB" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter Property="Foreground" Value="#64748B" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="False" />
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="TabBorder" Property="Background" Value="#F1F5F9" />
+                                <Setter Property="Foreground" Value="#0F172A" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Primary Button Style -->
@@ -33,7 +95,7 @@
             <Setter Property="Background" Value="#2563EB" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Padding" Value="14,9" />
+            <Setter Property="Padding" Value="14,10" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
@@ -59,10 +121,10 @@
 
         <!-- Success Button Style -->
         <Style x:Key="SuccessButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#16A34A" />
+            <Setter Property="Background" Value="#059669" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Padding" Value="16,11" />
+            <Setter Property="Padding" Value="16,12" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
@@ -78,7 +140,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#15803D" />
+                    <Setter Property="Background" Value="#047857" />
                 </Trigger>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Background" Value="#94A3B8" />
@@ -88,16 +150,19 @@
 
         <!-- Secondary Button Style -->
         <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#E2E8F0" />
-            <Setter Property="Foreground" Value="#1E293B" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Padding" Value="12,8" />
-            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="#F1F5F9" />
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="12,9" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -107,7 +172,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#CBD5E1" />
+                    <Setter Property="Background" Value="#E2E8F0" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -118,7 +183,8 @@
             <Setter Property="Foreground" Value="#DC2626" />
             <Setter Property="BorderBrush" Value="#FCA5A5" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="10,7" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -143,40 +209,62 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
     </Window.Resources>
 
-    <Grid>
+    <Grid Margin="18,14,18,14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- APPLICATION HEADER -->
-        <Border Grid.Row="0" Background="#1E293B" Padding="20,14" TextBlock.Foreground="White">
+        <!-- APPLICATION HEADER (Refined Modern Card Header from MAI reference) -->
+        <Border Grid.Row="0" CornerRadius="12" Padding="20,16" Margin="0,0,0,14" BorderThickness="1" Background="#FFFFFF" BorderBrush="#E2E8F0">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Direction="270" Color="#0F172A" Opacity="0.04" />
+            </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Інформаційно-Екстремальна Інтелектуальна Технологія (ІЕІТ)"
-                               FontSize="18" FontWeight="Bold" Foreground="#F8FAFC" />
-                    <TextBlock Text="Лабораторна робота №12: Формування вхідного математичного опису та навчальної матриці Y типу «об'єкт-властивість»"
-                               FontSize="12" Foreground="#94A3B8" Margin="0,3,0,0" />
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Інформаційно-Екстремальна Інтелектуальна Технологія (ІЕІТ)"
+                                   FontSize="18" FontWeight="Bold" Foreground="#0F172A" />
+                        <Border Background="#DBEAFE" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="8,3" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Лабораторна робота №12" FontSize="11" FontWeight="SemiBold" Foreground="#1E40AF" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="Формування вхідного математичного опису та навчальної матриці Y типу «об'єкт-властивість»"
+                               FontSize="12" Foreground="#64748B" Margin="0,4,0,0" />
                 </StackPanel>
-                <Border Grid.Column="1" Background="#334155" CornerRadius="6" Padding="12,6" VerticalAlignment="Center">
-                    <TextBlock Text=".NET 10 • WPF • trecognition_obj" FontSize="11" Foreground="#38BDF8" FontWeight="SemiBold" />
-                </Border>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,6" VerticalAlignment="Center">
+                        <TextBlock Text=".NET 10 • WPF • trecognition_obj" FontSize="11" Foreground="#0284C7" FontWeight="SemiBold" />
+                    </Border>
+                </StackPanel>
             </Grid>
         </Border>
 
-        <!-- TAB NAVIGATION -->
-        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="14,10,14,10">
+        <!-- MODERN NAVIGATION TABS -->
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="0,0,0,0">
             <!-- TAB 1: ЛР 12 (ACTIVE) -->
-            <TabItem Header=" ЛР №12: Навчальна матриця (Y) " FontWeight="SemiBold" FontSize="13">
-                <Grid Margin="0,10,0,0">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Path Data="{StaticResource IconGrid}"
+                              Width="14" Height="14" Margin="0,0,8,0" Stretch="Uniform"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                              StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        <TextBlock Text="ЛР №12: Навчальна матриця (Y)" VerticalAlignment="Center" />
+                    </StackPanel>
+                </TabItem.Header>
+
+                <Grid Margin="0,0,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="400" MinWidth="350" MaxWidth="500" />
-                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="450" MinWidth="420" MaxWidth="560" />
+                        <ColumnDefinition Width="10" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
@@ -187,7 +275,12 @@
                             <!-- CARD 1: INPUT PARAMETERS & CLASS LOADING -->
                             <Border Style="{StaticResource CardBorderStyle}">
                                 <StackPanel>
-                                    <TextBlock Text="⚙️ Параметри вхідного опису" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12" />
+                                    <!-- Header with vector sliders icon -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <Path Data="{StaticResource IconSliders}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Параметри вхідного опису" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
 
                                     <!-- Class count M -->
                                     <Grid Margin="0,0,0,10">
@@ -238,59 +331,118 @@
 
                                     <Separator Margin="0,4,0,12" Background="#E2E8F0" />
 
-                                    <!-- Action Buttons -->
+                                    <!-- Action Buttons with Crisp Vector Icons -->
                                     <Button Style="{StaticResource PrimaryButtonStyle}"
                                             Command="{Binding AddImagesCommand}"
-                                            Content="➕ Додати зображення класу..."
-                                            Margin="0,0,0,8" />
+                                            Margin="0,0,0,8">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Path Data="{StaticResource IconPlus}" Width="14" Height="14" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                  StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                            <TextBlock Text="Додати зображення класу..." VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
 
                                     <Button Style="{StaticResource SecondaryButtonStyle}"
                                             Command="{Binding LoadDemoResourcesCommand}"
-                                            Content="📂 Завантажити з папки Resources (Демо)"
                                             ToolTip="Завантажує 1.bmp та 2.bmp відповідно до варіанта"
-                                            Margin="0,0,0,8" />
+                                            Margin="0,0,0,8">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Path Data="{StaticResource IconFolder}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                  StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                                            <TextBlock Text="Завантажити з папки Resources (Демо)" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
 
                                     <Button Style="{StaticResource DangerOutlineButtonStyle}"
                                             Command="{Binding ClearAllClassesCommand}"
-                                            Content="🗑️ Очистити список класів"
-                                            Margin="0,0,0,14" />
+                                            Margin="0,0,0,14">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Path Data="{StaticResource IconTrash}" Width="14" Height="14" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                  StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                                            <TextBlock Text="Очистити список класів" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
 
-                                    <!-- FORM MATRIX BUTTON -->
+                                    <!-- FORM MATRIX BUTTON WITH VECTOR ROCKET -->
                                     <Button Style="{StaticResource SuccessButtonStyle}"
                                             Command="{Binding FormTrainingMatrixCommand}"
-                                            Content="🚀 СФОРМУВАТИ НАВЧАЛЬНУ МАТРИЦЮ Y"
-                                            FontSize="13" />
+                                            FontSize="13">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Path Data="{StaticResource IconRocket}" Width="16" Height="16" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                  StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                                            <TextBlock Text="СФОРМУВАТИ НАВЧАЛЬНУ МАТРИЦЮ Y" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
                                 </StackPanel>
                             </Border>
 
-                            <!-- CARD 2: QUANTITATIVE CHARACTERISTICS -->
+                            <!-- CARD 2: QUANTITATIVE CHARACTERISTICS (Expanded & No Text Overlap) -->
                             <Border Style="{StaticResource CardBorderStyle}">
                                 <StackPanel>
-                                    <TextBlock Text="📊 Кількісні характеристики набору даних" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,10" />
+                                    <!-- Header with vector chart icon -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <Path Data="{StaticResource IconChart}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Кількісні характеристики набору даних" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
 
-                                    <Grid Margin="0,3">
-                                        <TextBlock Text="Число класів розпізнавання (m):" Foreground="#475569" />
-                                        <TextBlock Text="{Binding TargetM}" FontWeight="Bold" HorizontalAlignment="Right" Foreground="#0F172A" />
+                                    <!-- Grid rows with explicit 2-column layout to prevent any overlapping -->
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Число класів розпізнавання (m):" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
+                                            <TextBlock Text="{Binding TargetM}" FontWeight="Bold" Foreground="#0F172A" />
+                                        </Border>
                                     </Grid>
 
-                                    <Grid Margin="0,3">
-                                        <TextBlock Text="Ознак розпізнавання (N, ширина):" Foreground="#475569" />
-                                        <TextBlock Text="{Binding EffectiveN}" FontWeight="Bold" HorizontalAlignment="Right" Foreground="#0F172A" />
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Ознак розпізнавання (N, ширина):" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
+                                            <TextBlock Text="{Binding EffectiveN}" FontWeight="Bold" Foreground="#0F172A" />
+                                        </Border>
                                     </Grid>
 
-                                    <Grid Margin="0,3">
-                                        <TextBlock Text="Реалізацій образу (l, висота):" Foreground="#475569" />
-                                        <TextBlock Text="{Binding EffectiveL}" FontWeight="Bold" HorizontalAlignment="Right" Foreground="#0F172A" />
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Реалізацій образу (l, висота):" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
+                                            <TextBlock Text="{Binding EffectiveL}" FontWeight="Bold" Foreground="#0F172A" />
+                                        </Border>
                                     </Grid>
 
-                                    <Grid Margin="0,3">
-                                        <TextBlock Text="Еталонний розмір зображень:" Foreground="#475569" />
-                                        <TextBlock Text="{Binding ReferenceDimensionsText}" FontWeight="SemiBold" HorizontalAlignment="Right" Foreground="#2563EB" />
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Еталонний розмір зображень:" Foreground="#475569" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="{Binding ReferenceDimensionsText}" FontWeight="SemiBold" Foreground="#2563EB" VerticalAlignment="Center" Margin="8,0,0,0" />
                                     </Grid>
 
-                                    <Grid Margin="0,3">
-                                        <TextBlock Text="Загальний обсяг вибірки (m×l×N):" Foreground="#475569" />
-                                        <TextBlock Text="{Binding TotalElementsCountText}" FontWeight="Bold" HorizontalAlignment="Right" Foreground="#0F172A" />
+                                    <!-- TOTAL ELEMENTS ROW WITH PILL BADGE -->
+                                    <Grid Margin="0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Загальний обсяг вибірки:" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="8,3" Margin="8,0,0,0">
+                                            <TextBlock Text="{Binding TotalElementsCountText}" FontWeight="Bold" Foreground="#1E40AF" VerticalAlignment="Center" />
+                                        </Border>
                                     </Grid>
 
                                     <Separator Margin="0,8,0,8" Background="#E2E8F0" />
@@ -306,7 +458,11 @@
                             <!-- CARD 3: LOG & EVENT JOURNAL -->
                             <Border Style="{StaticResource CardBorderStyle}">
                                 <StackPanel>
-                                    <TextBlock Text="📝 Журнал подій та валідації" FontSize="13" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <Path Data="{StaticResource IconList}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Журнал подій та валідації" FontSize="13" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
                                     <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Height="130">
                                         <ListBox ItemsSource="{Binding LogMessages}"
                                                  Background="Transparent"
@@ -341,7 +497,11 @@
                                 </Grid.RowDefinitions>
 
                                 <Grid Grid.Row="0" Margin="0,0,0,8">
-                                    <TextBlock Text="🖼️ Галерея класів розпізнавання" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Path Data="{StaticResource IconImage}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Галерея класів розпізнавання" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
                                     <TextBlock Text="{Binding StatusCounterText}" Foreground="{Binding StatusBrush}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </Grid>
 
@@ -366,21 +526,26 @@
                                                                 <RowDefinition Height="Auto" />
                                                             </Grid.RowDefinitions>
 
-                                                            <!-- Card Header -->
+                                                            <!-- Card Header with Close Icon -->
                                                             <Grid Grid.Row="0" Margin="0,0,0,6">
                                                                 <Border Background="#2563EB" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
                                                                     <TextBlock Text="{Binding ClassIndex, StringFormat='Клас #{0}'}" Foreground="White" FontSize="11" FontWeight="Bold" />
                                                                 </Border>
-                                                                <Button Content="✕"
-                                                                        Command="{Binding DataContext.RemoveClassCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                <Button Command="{Binding DataContext.RemoveClassCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                         CommandParameter="{Binding}"
                                                                         ToolTip="Видалити цей клас"
-                                                                        Foreground="#DC2626"
                                                                         Background="Transparent"
                                                                         BorderThickness="0"
-                                                                        FontWeight="Bold"
                                                                         HorizontalAlignment="Right"
-                                                                        Cursor="Hand" />
+                                                                        Cursor="Hand"
+                                                                        Padding="4">
+                                                                    <Path Data="{StaticResource IconClose}"
+                                                                          Width="11" Height="11"
+                                                                          Stretch="Uniform"
+                                                                          Stroke="#DC2626"
+                                                                          StrokeThickness="2"
+                                                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                                                </Button>
                                                             </Grid>
 
                                                             <!-- Thumbnail Preview -->
@@ -432,7 +597,9 @@
                                     </Grid.ColumnDefinitions>
 
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="🔍 Інспектор матриці Y" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                        <Path Data="{StaticResource IconSearch}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Інспектор матриці Y" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" Margin="0,0,14,0" />
                                         <TextBlock Text="Клас:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#475569" FontWeight="Medium" />
                                         <ComboBox ItemsSource="{Binding LoadedClasses}"
                                                   DisplayMemberPath="ClassName"
@@ -484,7 +651,17 @@
             </TabItem>
 
             <!-- TAB 2: ЛР 13 (PREVIEW) -->
-            <TabItem Header=" ЛР №13: Бінаризація та СКД (X, EV) " FontSize="13">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Path Data="{StaticResource IconLayers}"
+                              Width="14" Height="14" Margin="0,0,8,0" Stretch="Uniform"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                              StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        <TextBlock Text="ЛР №13: Бінаризація та СКД (X, EV)" VerticalAlignment="Center" />
+                    </StackPanel>
+                </TabItem.Header>
+
                 <ScrollViewer Margin="0,14,0,0">
                     <StackPanel MaxWidth="900" HorizontalAlignment="Left">
                         <Border Style="{StaticResource CardBorderStyle}">
@@ -514,7 +691,17 @@
             </TabItem>
 
             <!-- TAB 3: ЛР 14 (PREVIEW) -->
-            <TabItem Header=" ЛР №14: Кодові відстані (SK) " FontSize="13">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Path Data="{StaticResource IconNodes}"
+                              Width="14" Height="14" Margin="0,0,8,0" Stretch="Uniform"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                              StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        <TextBlock Text="ЛР №14: Кодові відстані (SK)" VerticalAlignment="Center" />
+                    </StackPanel>
+                </TabItem.Header>
+
                 <ScrollViewer Margin="0,14,0,0">
                     <StackPanel MaxWidth="900" HorizontalAlignment="Left">
                         <Border Style="{StaticResource CardBorderStyle}">
@@ -540,7 +727,17 @@
             </TabItem>
 
             <!-- TAB 4: ЛР 15 (PREVIEW) -->
-            <TabItem Header=" ЛР №15: Оптимізація КФЕ та Екзамен " FontSize="13">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Path Data="{StaticResource IconTarget}"
+                              Width="14" Height="14" Margin="0,0,8,0" Stretch="Uniform"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                              StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        <TextBlock Text="ЛР №15: Оптимізація КФЕ та Екзамен" VerticalAlignment="Center" />
+                    </StackPanel>
+                </TabItem.Header>
+
                 <ScrollViewer Margin="0,14,0,0">
                     <StackPanel MaxWidth="900" HorizontalAlignment="Left">
                         <Border Style="{StaticResource CardBorderStyle}">
@@ -570,7 +767,10 @@
         </TabControl>
 
         <!-- STATUS BAR -->
-        <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="14,6">
+        <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14,8" Margin="0,6,0,0">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="4" ShadowDepth="1" Direction="270" Color="#0F172A" Opacity="0.03" />
+            </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
