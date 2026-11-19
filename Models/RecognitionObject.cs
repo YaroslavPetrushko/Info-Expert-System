@@ -54,12 +54,12 @@ public class RecognitionObject
     /// <summary>
     /// Вектор верхніх контрольних допусків СКД [N] (для ЛР №13).
     /// </summary>
-    public int[] VD { get; set; } = Array.Empty<int>();
+    public double[] VD { get; set; } = Array.Empty<double>();
 
     /// <summary>
     /// Вектор нижніх контрольних допусків СКД [N] (для ЛР №13).
     /// </summary>
-    public int[] ND { get; set; } = Array.Empty<int>();
+    public double[] ND { get; set; } = Array.Empty<double>();
 
     /// <summary>
     /// Вектор оптимальних радіусів контейнерів класів [M] (для ЛР №15).
@@ -198,8 +198,8 @@ public class RecognitionObject
         }
 
         MeanVector = new double[N];
-        VD = new int[N];
-        ND = new int[N];
+        VD = new double[N];
+        ND = new double[N];
         D = new int[M];
         BaseClassIndex = 0;
 

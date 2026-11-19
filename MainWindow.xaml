@@ -655,7 +655,7 @@
                 </Grid>
             </TabItem>
 
-            <!-- TAB 2: ЛР 13 (PREVIEW) -->
+            <!-- TAB 2: ЛР 13 (АКТИВНА: СКД ТА БІНАРИЗАЦІЯ) -->
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -667,32 +667,478 @@
                     </StackPanel>
                 </TabItem.Header>
 
-                <ScrollViewer Margin="0,14,0,0">
-                    <StackPanel MaxWidth="900" HorizontalAlignment="Left">
-                        <Border Style="{StaticResource CardBorderStyle}">
-                            <StackPanel>
-                                <TextBlock Text="Лабораторна робота №13: Формування бінарної навчальної матриці X та еталонних векторів EV"
-                                           FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,10" />
-                                <TextBlock Text="У наступній лабораторній роботі на основі сформованої матриці Y[M, L, N] буде виконано:"
-                                           FontSize="13" Foreground="#475569" Margin="0,0,0,10" />
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="450" MinWidth="420" MaxWidth="560" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                                <TextBlock Margin="10,3" Foreground="#334155">
-                                    • <Bold>Побудова системи контрольних допусків (СКД):</Bold> вибір базового класу (BaseClassIndex), розрахунок вектора середніх значень MeanVector[N], обчислення коридору [ND..VD] з кроком дельта (StepKD).
-                                </TextBlock>
-                                <TextBlock Margin="10,3" Foreground="#334155">
-                                    • <Bold>Бінаризація навчальної матриці Y ➔ X:</Bold> формування тривимірного бінарного масиву X[M][L][N] (значення 0 або 1).
-                                </TextBlock>
-                                <TextBlock Margin="10,3" Foreground="#334155">
-                                    • <Bold>Синтез бінарних еталонних векторів EV[M][N]:</Bold> розрахунок геометричних центрів класів за правилом більшості.
-                                </TextBlock>
+                    <!-- LEFT COLUMN: CONTROLS & TOLERANCE METRICS -->
+                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="0,0,6,0">
 
-                                <Separator Margin="0,14,0,14" Background="#E2E8F0" />
-                                <TextBlock Text="Поточний стан структури даних trecognition_obj:" FontWeight="SemiBold" Margin="0,0,0,6" />
-                                <TextBlock Text="{Binding MatrixFormedStatusText}" Foreground="{Binding MatrixStatusBrush}" FontWeight="SemiBold" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            <!-- WARNING BANNER IF Y IS NOT FORMED -->
+                            <Border Background="#FEF3C7" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12"
+                                    Visibility="{Binding IsYMissing, Converter={StaticResource BoolToVisConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="⚠️ Навчальна матриця Y ще не сформована" FontWeight="Bold" Foreground="#92400E" FontSize="13" />
+                                    <TextBlock Text="Перейдіть на вкладку «ЛР №12: Навчальна матриця (Y)», завантажте зображення та натисніть «Сформувати навчальну матрицю Y»."
+                                               TextWrapping="Wrap" Foreground="#B45309" FontSize="11" Margin="0,4,0,0" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- CARD 1: BINARIZATION & SKD PARAMETERS -->
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <StackPanel>
+                                    <!-- Header with vector sliders icon -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <Path Data="{StaticResource IconSliders}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Параметри побудови СКД та бінаризації" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- Base Class Selection -->
+                                    <TextBlock Text="Базовий клас розпізнавання (base):" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,4" />
+                                    <ComboBox ItemsSource="{Binding LoadedClasses}"
+                                              DisplayMemberPath="ClassName"
+                                              SelectedIndex="{Binding BaseClassIndex}"
+                                              Padding="6" Margin="0,0,0,4" />
+                                    <TextBlock Text="Визначає центр розподілу та коридор допусків (за замовчуванням Клас 1 - «норма»)"
+                                               FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+                                    <!-- Step Delta (StepKD) -->
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="65" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Крок коридору допусків (δ):" FontWeight="Medium" Foreground="#334155" />
+                                            <TextBlock Text="Діапазон від 0 до 255" FontSize="11" Foreground="#64748B" />
+                                        </StackPanel>
+                                        <TextBox Grid.Column="1" Text="{Binding StepKD, UpdateSourceTrigger=PropertyChanged}"
+                                                 FontSize="14" FontWeight="Bold" TextAlignment="Center" Padding="4" VerticalContentAlignment="Center" />
+                                    </Grid>
+
+                                    <!-- Slider for Delta -->
+                                    <Slider Minimum="0" Maximum="255" SmallChange="1" LargeChange="10"
+                                            Value="{Binding StepKD, UpdateSourceTrigger=PropertyChanged}"
+                                            Margin="0,0,0,14" />
+
+                                    <Separator Margin="0,0,0,12" Background="#E2E8F0" />
+
+                                    <!-- Action Button: Form SKD & Binarize -->
+                                    <Button Style="{StaticResource SuccessButtonStyle}"
+                                            Command="{Binding BinarizeCommand}"
+                                            FontSize="13">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Path Data="{StaticResource IconLayers}" Width="16" Height="16" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                  StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                                            <TextBlock Text="ПОБУДУВАТИ СКД ТА БІНАРИЗУВАТИ" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- CARD 2: QUANTITATIVE CHARACTERISTICS -->
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <StackPanel>
+                                    <!-- Header with vector chart icon -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <Path Data="{StaticResource IconChart}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Кількісні характеристики СКД та бінаризації" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Базовий клас розпізнавання:" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="4" Padding="8,2">
+                                            <TextBlock Text="{Binding BaseClassNameText}" FontWeight="Bold" Foreground="#1E40AF" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Крок коридору допусків (δ):" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
+                                            <TextBlock Text="{Binding StepKD}" FontWeight="Bold" Foreground="#0F172A" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Число класів розпізнавання (m):" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
+                                            <TextBlock Text="{Binding RecognitionObj.M}" FontWeight="Bold" Foreground="#0F172A" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Розмірність матриць (l × N):" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
+                                            <TextBlock FontWeight="Bold" Foreground="#0F172A">
+                                                <Run Text="{Binding RecognitionObj.L, Mode=OneWay}" />
+                                                <Run Text=" × " />
+                                                <Run Text="{Binding RecognitionObj.N, Mode=OneWay}" />
+                                            </TextBlock>
+                                        </Border>
+                                    </Grid>
+
+                                    <Separator Margin="0,8,0,8" Background="#E2E8F0" />
+
+                                    <!-- Ones Distribution in X -->
+                                    <TextBlock Text="Розподіл одиниць у бінарних матрицях X:" FontWeight="SemiBold" FontSize="12" Foreground="#334155" Margin="0,0,0,6" />
+                                    
+                                    <ItemsControl ItemsSource="{Binding BinaryClassesStatistics}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="8,5" Margin="0,0,0,5">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding ClassName}" FontWeight="SemiBold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                                            <Border Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="6,0,0,0"
+                                                                    Visibility="{Binding IsBaseClass, Converter={StaticResource BoolToVisConverter}}">
+                                                                <TextBlock Text="Базовий" FontSize="9" FontWeight="Bold" Foreground="#15803D" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="6,2">
+                                                            <TextBlock FontWeight="Bold" Foreground="#2563EB" FontSize="11">
+                                                                <Run Text="{Binding OnesCount, Mode=OneWay, StringFormat='{}{0:N0}'}" />
+                                                                <Run Text=" од. (" />
+                                                                <Run Text="{Binding Percentage, Mode=OneWay, StringFormat='{}{0:F1}%'}" />
+                                                                <Run Text=")" />
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <Separator Margin="0,6,0,8" Background="#E2E8F0" />
+
+                                    <TextBlock Text="Стан побудови СКД та бінаризації:" FontSize="11" Foreground="#64748B" />
+                                    <TextBlock Text="{Binding BinarizationStatusText}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{Binding BinarizationStatusBrush}"
+                                               TextWrapping="Wrap" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- CARD 3: LOG & EVENT JOURNAL -->
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <Path Data="{StaticResource IconList}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Журнал подій та валідації" FontSize="13" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Height="130">
+                                        <ListBox ItemsSource="{Binding LogMessages}"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 FontSize="11"
+                                                 FontFamily="Consolas"
+                                                 Foreground="#334155" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- GRID SPLITTER -->
+                    <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" Background="#CBD5E1" ShowsPreview="True" />
+
+                    <!-- RIGHT COLUMN: THREE BLOCKS (TOLERANCE GRAPH, BINARY INSPECTOR, REFERENCE VECTORS) -->
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="0,0,0,8">
+
+                            <!-- BLOCK A: TOLERANCE CORRIDOR GRAPH -->
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Graph Header & Legend -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Path Data="{StaticResource IconChart}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                            <TextBlock Text="Коридор системи контрольних допусків (СКД)" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                        </StackPanel>
+
+                                        <!-- Legend -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Border Background="#F1F5F9" CornerRadius="4" Padding="6,3" Margin="3,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="8" Height="8" Fill="#059669" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="Верхній (VD = M+δ)" FontSize="10" FontWeight="SemiBold" Foreground="#065F46" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Background="#F1F5F9" CornerRadius="4" Padding="6,3" Margin="3,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="8" Height="8" Fill="#2563EB" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="Еталон (M[y])" FontSize="10" FontWeight="SemiBold" Foreground="#1E40AF" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Background="#F1F5F9" CornerRadius="4" Padding="6,3" Margin="3,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="8" Height="8" Fill="#D97706" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="Нижній (ND = M-δ)" FontSize="10" FontWeight="SemiBold" Foreground="#92400E" />
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Canvas Graph in Viewbox -->
+                                    <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Height="205">
+                                        <Grid>
+                                            <!-- Waiting placeholder when not binarized -->
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                        Visibility="{Binding IsBinarizePending, Converter={StaticResource BoolToVisConverter}}">
+                                                <TextBlock Text="Графік СКД очікує побудови" FontWeight="SemiBold" Foreground="#94A3B8" HorizontalAlignment="Center" />
+                                                <TextBlock Text="Натисніть кнопку «ПОБУДУВАТИ СКД ТА БІНАРИЗУВАТИ» для розрахунку та візуалізації коридору"
+                                                           FontSize="11" Foreground="#CBD5E1" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                                            </StackPanel>
+
+                                            <!-- Rendered Canvas when binarized -->
+                                            <Viewbox Stretch="Fill" Height="195"
+                                                     Visibility="{Binding IsBinarized, Converter={StaticResource BoolToVisConverter}}">
+                                                <Canvas Width="700" Height="200" Background="Transparent">
+                                                    <!-- Background gridlines -->
+                                                    <Line X1="45" Y1="15" X2="665" Y2="15" Stroke="#E2E8F0" StrokeThickness="1" StrokeDashArray="3,3" />
+                                                    <TextBlock Text="255" Canvas.Left="15" Canvas.Top="8" FontSize="10" Foreground="#94A3B8" />
+
+                                                    <Line X1="45" Y1="57.5" X2="665" Y2="57.5" Stroke="#F1F5F9" StrokeThickness="1" StrokeDashArray="2,2" />
+                                                    <TextBlock Text="192" Canvas.Left="15" Canvas.Top="51" FontSize="10" Foreground="#94A3B8" />
+
+                                                    <Line X1="45" Y1="100" X2="665" Y2="100" Stroke="#E2E8F0" StrokeThickness="1" StrokeDashArray="3,3" />
+                                                    <TextBlock Text="128" Canvas.Left="15" Canvas.Top="93" FontSize="10" Foreground="#94A3B8" />
+
+                                                    <Line X1="45" Y1="142.5" X2="665" Y2="142.5" Stroke="#F1F5F9" StrokeThickness="1" StrokeDashArray="2,2" />
+                                                    <TextBlock Text="64" Canvas.Left="20" Canvas.Top="136" FontSize="10" Foreground="#94A3B8" />
+
+                                                    <Line X1="45" Y1="185" X2="665" Y2="185" Stroke="#94A3B8" StrokeThickness="1.5" />
+                                                    <TextBlock Text="0" Canvas.Left="26" Canvas.Top="179" FontSize="10" Foreground="#94A3B8" />
+
+                                                    <Line X1="45" Y1="15" X2="45" Y2="185" Stroke="#94A3B8" StrokeThickness="1.5" />
+
+                                                    <!-- Polylines for VD, Mean, ND -->
+                                                    <Polyline Points="{Binding ToleranceVDPoints}" Stroke="#059669" StrokeThickness="2" StrokeLineJoin="Round" />
+                                                    <Polyline Points="{Binding ToleranceMeanPoints}" Stroke="#2563EB" StrokeThickness="2.2" StrokeLineJoin="Round" />
+                                                    <Polyline Points="{Binding ToleranceNDPoints}" Stroke="#D97706" StrokeThickness="2" StrokeLineJoin="Round" />
+
+                                                    <!-- X Axis labels -->
+                                                    <TextBlock Text="Ознаки розпізнавання (i = 1..N)" Canvas.Left="270" Canvas.Top="187" FontSize="10" Foreground="#64748B" FontWeight="SemiBold" />
+                                                    <TextBlock Text="1" Canvas.Left="45" Canvas.Top="187" FontSize="10" Foreground="#64748B" />
+                                                    <TextBlock Text="{Binding RecognitionObj.N, StringFormat='N={0}'}" Canvas.Left="640" Canvas.Top="187" FontSize="10" Foreground="#64748B" />
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- BLOCK B: BINARY MATRIX X INSPECTOR & VISUAL MAP -->
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="260" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Controls Bar -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Path Data="{StaticResource IconSearch}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                            <TextBlock Text="Інспектор бінарної матриці X" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" Margin="0,0,14,0" />
+                                            <TextBlock Text="Клас:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#475569" FontWeight="Medium" />
+                                            <ComboBox ItemsSource="{Binding LoadedClasses}"
+                                                      DisplayMemberPath="ClassName"
+                                                      SelectedIndex="{Binding SelectedClassIndexForBinaryInspector}"
+                                                      Width="200" VerticalAlignment="Center" />
+                                        </StackPanel>
+
+                                        <!-- Quick Stats Badge -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Border Background="#F1F5F9" CornerRadius="4" Padding="8,4">
+                                                <TextBlock FontWeight="SemiBold" Foreground="#0F172A" FontSize="11">
+                                                    <Run Text="Одиниць у матриці: " Foreground="#64748B" />
+                                                    <Run Text="{Binding SelectedBinaryOnesCount, Mode=OneWay, StringFormat='{}{0:N0}'}" Foreground="#2563EB" />
+                                                    <Run Text=" (" Foreground="#64748B" />
+                                                    <Run Text="{Binding SelectedBinaryOnesPercentage, Mode=OneWay, StringFormat='{}{0:F1}%'}" Foreground="#2563EB" />
+                                                    <Run Text=")" Foreground="#64748B" />
+                                                </TextBlock>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock Grid.Row="1" Text="{Binding SelectedBinaryClassInfo}" FontSize="11" Foreground="#64748B" Margin="0,0,0,6" />
+
+                                    <!-- Grid & Visual Map side-by-side -->
+                                    <Grid Grid.Row="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="220" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Binary DataGrid -->
+                                        <Border Grid.Column="0" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Background="White">
+                                            <controls:FastDataGrid ItemsSource="{Binding CurrentBinaryMatrixView}"
+                                                                  AutoGenerateColumns="True"
+                                                                  IsReadOnly="True"
+                                                                  CanUserAddRows="False"
+                                                                  CanUserDeleteRows="False"
+                                                                  EnableRowVirtualization="True"
+                                                                  EnableColumnVirtualization="True"
+                                                                  VirtualizingPanel.IsVirtualizing="True"
+                                                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                                                  VirtualizingPanel.ScrollUnit="Pixel"
+                                                                  VirtualizingPanel.CacheLength="1,1"
+                                                                  VirtualizingPanel.CacheLengthUnit="Page"
+                                                                  ScrollViewer.CanContentScroll="True"
+                                                                  HeadersVisibility="All"
+                                                                  GridLinesVisibility="All"
+                                                                  HorizontalGridLinesBrush="#E2E8F0"
+                                                                  VerticalGridLinesBrush="#E2E8F0"
+                                                                  AlternatingRowBackground="#F8FAFC"
+                                                                  FontFamily="Consolas"
+                                                                  FontSize="11"
+                                                                  RowHeaderWidth="20" />
+                                        </Border>
+
+                                        <!-- Visual Map of Matrix X -->
+                                        <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="8">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Grid.Row="0" Text="Візуальна карта X (1=чорне, 0=біле)" FontSize="10" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6" TextAlignment="Center" />
+
+                                                <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4">
+                                                    <Image Source="{Binding CurrentBinaryVisualMap}"
+                                                           Stretch="Uniform"
+                                                           RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                                </Border>
+
+                                                <TextBlock Grid.Row="2" Text="{Binding LoadedClasses[0].DimensionsString}" FontSize="10" Foreground="#94A3B8" TextAlignment="Center" Margin="0,4,0,0" />
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <!-- BLOCK C: BINARY REFERENCE VECTORS (EV) -->
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,0">
+                                <StackPanel>
+                                    <!-- Header -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <Path Data="{StaticResource IconTarget}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Двійкові еталонні вектори EV (Штрих-коди центрів класів)" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- Waiting placeholder when not binarized -->
+                                    <TextBlock Text="Еталонні вектори очікують побудови..." FontSize="11" Foreground="#94A3B8" Margin="0,4,0,4"
+                                               Visibility="{Binding IsBinarizePending, Converter={StaticResource BoolToVisConverter}}" />
+
+                                    <!-- Barcode Cards List -->
+                                    <ItemsControl ItemsSource="{Binding ReferenceVectors}"
+                                                  Visibility="{Binding IsBinarized, Converter={StaticResource BoolToVisConverter}}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,8">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+
+                                                        <!-- Row 0: Class name and count -->
+                                                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding ClassName}" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                                                <Border Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="8,0,0,0"
+                                                                        Visibility="{Binding IsBaseClass, Converter={StaticResource BoolToVisConverter}}">
+                                                                    <TextBlock Text="Базовий клас" FontSize="9" FontWeight="Bold" Foreground="#15803D" />
+                                                                </Border>
+                                                            </StackPanel>
+
+                                                            <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="6,2">
+                                                                <TextBlock FontWeight="SemiBold" Foreground="#2563EB" FontSize="11">
+                                                                    <Run Text="Одиниць: " Foreground="#64748B" />
+                                                                    <Run Text="{Binding OnesCount, Mode=OneWay}" />
+                                                                    <Run Text=" з " Foreground="#64748B" />
+                                                                    <Run Text="{Binding TotalFeatures, Mode=OneWay}" />
+                                                                    <Run Text=" (" Foreground="#64748B" />
+                                                                    <Run Text="{Binding Percentage, Mode=OneWay, StringFormat='{}{0:F1}%'}" />
+                                                                    <Run Text=")" />
+                                                                </TextBlock>
+                                                            </Border>
+                                                        </Grid>
+
+                                                        <!-- Row 1: Barcode Strip -->
+                                                        <Border Grid.Row="1" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="2" Height="28">
+                                                            <Image Source="{Binding BarcodeImage}"
+                                                                   Stretch="Fill"
+                                                                   RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                </Grid>
             </TabItem>
 
             <!-- TAB 3: ЛР 14 (PREVIEW) -->
