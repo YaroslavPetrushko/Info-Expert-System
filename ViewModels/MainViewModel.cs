@@ -128,6 +128,8 @@ public class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(IsManualDimensions));
                 OnPropertyChanged(nameof(EffectiveL));
                 OnPropertyChanged(nameof(EffectiveN));
+                OnPropertyChanged(nameof(MatrixL));
+                OnPropertyChanged(nameof(MatrixN));
                 OnPropertyChanged(nameof(TotalElementsCountText));
             }
         }
@@ -155,6 +157,7 @@ public class MainViewModel : INotifyPropertyChanged
                 _customL = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(EffectiveL));
+                OnPropertyChanged(nameof(MatrixL));
                 OnPropertyChanged(nameof(TotalElementsCountText));
             }
         }
@@ -173,6 +176,7 @@ public class MainViewModel : INotifyPropertyChanged
                 _customN = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(EffectiveN));
+                OnPropertyChanged(nameof(MatrixN));
                 OnPropertyChanged(nameof(TotalElementsCountText));
             }
         }
@@ -192,6 +196,7 @@ public class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(ReferenceDimensionsText));
                 OnPropertyChanged(nameof(EffectiveN));
+                OnPropertyChanged(nameof(MatrixN));
                 OnPropertyChanged(nameof(TotalElementsCountText));
             }
         }
@@ -211,6 +216,7 @@ public class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(ReferenceDimensionsText));
                 OnPropertyChanged(nameof(EffectiveL));
+                OnPropertyChanged(nameof(MatrixL));
                 OnPropertyChanged(nameof(TotalElementsCountText));
             }
         }
@@ -225,6 +231,21 @@ public class MainViewModel : INotifyPropertyChanged
     /// Фактична кількість ознак N, яка буде використана у матриці.
     /// </summary>
     public int EffectiveN => IsAutoDimensions ? (ReferenceWidth ?? 0) : CustomN;
+
+    /// <summary>
+    /// Фактична кількість класів розпізнавання (m) для відображення в системі.
+    /// </summary>
+    public int MatrixM => RecognitionObj.M > 0 ? RecognitionObj.M : LoadedClasses.Count;
+
+    /// <summary>
+    /// Фактична кількість реалізацій образу (l) для відображення в системі.
+    /// </summary>
+    public int MatrixL => RecognitionObj.L > 0 ? RecognitionObj.L : EffectiveL;
+
+    /// <summary>
+    /// Фактична кількість ознак розпізнавання (N) для відображення в системі.
+    /// </summary>
+    public int MatrixN => RecognitionObj.N > 0 ? RecognitionObj.N : EffectiveN;
 
     /// <summary>
     /// Рядкове представлення еталонних розмірів.
@@ -926,6 +947,7 @@ public class MainViewModel : INotifyPropertyChanged
             RecognitionObj.CreateMathematicalDescription(LoadedClasses.ToList(), targetL, targetN);
             IsMatrixFormed = true;
             ResetBinarizationState(); // Скидання попередніх бінарних даних при зміні Y
+            NotifyCountersChanged();
 
             Log($"[Успіх] Навчальну матрицю Y успішно сформовано! Параметри: M = {RecognitionObj.M}, L = {RecognitionObj.L}, N = {RecognitionObj.N}.");
             Log($"[Метрика] Загальна кількість точок вхідного опису: {RecognitionObj.M * RecognitionObj.L * RecognitionObj.N} елементів.");
@@ -1093,14 +1115,16 @@ public class MainViewModel : INotifyPropertyChanged
             // 6. Оновлення точок для Canvas-графіка коридору допусків
             UpdateToleranceGraphPoints(mean, nd, vd, n);
 
+            // Позначаємо успішне завершення бінаризації перед оновленням інспектора
+            IsBinarized = true;
+
             // 7. Оновлення перегляду інспектора бінарної матриці
-            if (SelectedClassIndexForBinaryInspector >= m)
+            if (SelectedClassIndexForBinaryInspector >= m || SelectedClassIndexForBinaryInspector < 0)
             {
                 SelectedClassIndexForBinaryInspector = 0;
             }
             UpdateBinaryInspectorView();
-
-            IsBinarized = true;
+            NotifyCountersChanged();
 
             string baseName = (LoadedClasses.Count > BaseClassIndex) ? LoadedClasses[BaseClassIndex].ClassName : $"Клас {BaseClassIndex + 1}";
             Log($"[ЛР №13: СКД та Бінаризація] Сформовано СКД: Базовий клас = «{baseName}», крок δ = {StepKD}, m = {m}, l = {l}, N = {n}.");
@@ -1221,6 +1245,7 @@ public class MainViewModel : INotifyPropertyChanged
         SelectedBinaryClassInfo = "Бінаризацію ще не виконано.";
         SelectedBinaryOnesCount = 0;
         SelectedBinaryOnesPercentage = 0.0;
+        NotifyCountersChanged();
     }
 
     private void ReindexClasses()
@@ -1237,6 +1262,9 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(StatusBrush));
         OnPropertyChanged(nameof(TotalElementsCountText));
         OnPropertyChanged(nameof(BaseClassNameText));
+        OnPropertyChanged(nameof(MatrixM));
+        OnPropertyChanged(nameof(MatrixL));
+        OnPropertyChanged(nameof(MatrixN));
     }
 
     private void Log(string message)

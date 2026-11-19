@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Info_Extreme_System.Models;
 
@@ -8,8 +10,14 @@ namespace Info_Extreme_System.Models;
 /// Містить повний вхідний математичний опис, структуру даних для навчання (ЛР №12-15),
 /// бінаризації (ЛР №13), кодових відстаней (ЛР №14), оптимізації КФЕ та екзамену (ЛР №15).
 /// </summary>
-public class RecognitionObject
+public class RecognitionObject : INotifyPropertyChanged
 {
+    private int _m;
+    private int _n;
+    private int _l;
+    private int _stepKd = 1;
+    private int _baseClassIndex;
+
     // ==========================================
     // 1. ОСНОВНИЙ БЛОК (MAIN BLOCK)
     // ==========================================
@@ -17,17 +25,50 @@ public class RecognitionObject
     /// <summary>
     /// Кількість класів розпізнавання (m).
     /// </summary>
-    public int M { get; set; }
+    public int M
+    {
+        get => _m;
+        set
+        {
+            if (_m != value)
+            {
+                _m = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Кількість ознак розпізнавання (N, ширина рецепторного поля / стовпчики).
     /// </summary>
-    public int N { get; set; }
+    public int N
+    {
+        get => _n;
+        set
+        {
+            if (_n != value)
+            {
+                _n = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Кількість реалізацій одного образу (L, висота рецепторного поля / рядки).
     /// </summary>
-    public int L { get; set; }
+    public int L
+    {
+        get => _l;
+        set
+        {
+            if (_l != value)
+            {
+                _l = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Навчальна матриця типу "об'єкт-властивість" Y [M][L][N].
@@ -44,7 +85,18 @@ public class RecognitionObject
     /// <summary>
     /// Крок дельта для побудови коридору системи контрольних допусків (СКД) (0..255).
     /// </summary>
-    public int StepKD { get; set; } = 1;
+    public int StepKD
+    {
+        get => _stepKd;
+        set
+        {
+            if (_stepKd != value)
+            {
+                _stepKd = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Вектор математичного сподівання ознак базового класу [N] (для ЛР №13).
@@ -69,7 +121,18 @@ public class RecognitionObject
     /// <summary>
     /// Індекс базового класу (0..M-1) для побудови СКД (для ЛР №13).
     /// </summary>
-    public int BaseClassIndex { get; set; } = 0;
+    public int BaseClassIndex
+    {
+        get => _baseClassIndex;
+        set
+        {
+            if (_baseClassIndex != value)
+            {
+                _baseClassIndex = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Еталонні бінарні вектори (геометричні центри класів) EV [M][N] (для ЛР №13).
@@ -296,5 +359,12 @@ public class RecognitionObject
     public virtual void Exam()
     {
         // Заглушка для наступних лабораторних робіт
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

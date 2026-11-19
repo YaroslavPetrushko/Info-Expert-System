@@ -781,7 +781,7 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="Число класів розпізнавання (m):" Foreground="#475569" VerticalAlignment="Center" />
                                         <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
-                                            <TextBlock Text="{Binding RecognitionObj.M}" FontWeight="Bold" Foreground="#0F172A" />
+                                            <TextBlock Text="{Binding MatrixM}" FontWeight="Bold" Foreground="#0F172A" />
                                         </Border>
                                     </Grid>
 
@@ -793,9 +793,9 @@
                                         <TextBlock Grid.Column="0" Text="Розмірність матриць (l × N):" Foreground="#475569" VerticalAlignment="Center" />
                                         <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
                                             <TextBlock FontWeight="Bold" Foreground="#0F172A">
-                                                <Run Text="{Binding RecognitionObj.L, Mode=OneWay}" />
+                                                <Run Text="{Binding MatrixL, Mode=OneWay}" />
                                                 <Run Text=" × " />
-                                                <Run Text="{Binding RecognitionObj.N, Mode=OneWay}" />
+                                                <Run Text="{Binding MatrixN, Mode=OneWay}" />
                                             </TextBlock>
                                         </Border>
                                     </Grid>
@@ -959,7 +959,7 @@
                                                     <!-- X Axis labels -->
                                                     <TextBlock Text="Ознаки розпізнавання (i = 1..N)" Canvas.Left="270" Canvas.Top="187" FontSize="10" Foreground="#64748B" FontWeight="SemiBold" />
                                                     <TextBlock Text="1" Canvas.Left="45" Canvas.Top="187" FontSize="10" Foreground="#64748B" />
-                                                    <TextBlock Text="{Binding RecognitionObj.N, StringFormat='N={0}'}" Canvas.Left="640" Canvas.Top="187" FontSize="10" Foreground="#64748B" />
+                                                    <TextBlock Text="{Binding MatrixN, StringFormat='N={0}'}" Canvas.Left="640" Canvas.Top="187" FontSize="10" Foreground="#64748B" />
                                                 </Canvas>
                                             </Viewbox>
                                         </Grid>
