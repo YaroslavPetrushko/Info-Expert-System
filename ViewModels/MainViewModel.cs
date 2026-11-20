@@ -71,6 +71,10 @@ public class MainViewModel : INotifyPropertyChanged
     private double _skMapScale = 1.0;
     private string _skMapWorldBoundsText = string.Empty;
 
+    // --- Поля інтерактивних графіків (СКД та SK_MAP) ---
+    private TolerancePointDetails? _selectedTolerancePoint;
+    private SkMapSelectionInfo _skMapSelection = new();
+
     public MainViewModel()
     {
         _imageService = new ImageProcessingService();
@@ -94,6 +98,16 @@ public class MainViewModel : INotifyPropertyChanged
 
         // Команди вкладки 3 (ЛР №14)
         ComputeDistancesCommand = new RelayCommand(ExecuteComputeDistances);
+
+        // Команди інтерактивних графіків (СКД та SK_MAP)
+        SelectToleranceChartPointCommand = new RelayCommand(ExecuteSelectToleranceChartPoint);
+        PrevToleranceFeatureCommand = new RelayCommand(ExecutePrevToleranceFeature);
+        NextToleranceFeatureCommand = new RelayCommand(ExecuteNextToleranceFeature);
+        ClearToleranceSelectionCommand = new RelayCommand(ExecuteClearToleranceSelection);
+
+        SelectSkMapCenterCommand = new RelayCommand(param => ExecuteSelectSkMapCenter(param as string));
+        SelectSkMapPointCommand = new RelayCommand(param => ExecuteSelectSkMapPoint(param as SkMapPoint));
+        ClearSkMapSelectionCommand = new RelayCommand(_ => ExecuteClearSkMapSelection());
 
         Log("Система ІЕІТ ініціалізована. Готова до роботи з ЛР №12, №13 та №14.");
     }
@@ -990,6 +1004,45 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     // ==========================================
+    // ВЛАСТИВОСТІ ІНТЕРАКТИВНИХ ГРАФІКІВ
+    // ==========================================
+
+    /// <summary>
+    /// Інформація про обрану ознаку на графіку СКД (Вкладка 2).
+    /// </summary>
+    public TolerancePointDetails? SelectedTolerancePoint
+    {
+        get => _selectedTolerancePoint;
+        private set
+        {
+            if (_selectedTolerancePoint != value)
+            {
+                _selectedTolerancePoint = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasSelectedTolerancePoint));
+            }
+        }
+    }
+
+    public bool HasSelectedTolerancePoint => SelectedTolerancePoint != null;
+
+    /// <summary>
+    /// Стан виділення інтерактивного елемента на карті SK_MAP (Вкладка 3).
+    /// </summary>
+    public SkMapSelectionInfo SkMapSelection
+    {
+        get => _skMapSelection;
+        private set
+        {
+            if (_skMapSelection != value)
+            {
+                _skMapSelection = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    // ==========================================
     // КОМАНДИ (COMMANDS)
     // ==========================================
 
@@ -1000,6 +1053,16 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand FormTrainingMatrixCommand { get; }
     public ICommand BinarizeCommand { get; }
     public ICommand ComputeDistancesCommand { get; }
+
+    // Команди інтерактивних графіків
+    public ICommand SelectToleranceChartPointCommand { get; }
+    public ICommand PrevToleranceFeatureCommand { get; }
+    public ICommand NextToleranceFeatureCommand { get; }
+    public ICommand ClearToleranceSelectionCommand { get; }
+
+    public ICommand SelectSkMapCenterCommand { get; }
+    public ICommand SelectSkMapPointCommand { get; }
+    public ICommand ClearSkMapSelectionCommand { get; }
 
     // ==========================================
     // РЕАЛІЗАЦІЯ ДІЙ ТА ВАЛІДАЦІЇ (ЛР №12)
@@ -1455,6 +1518,19 @@ public class MainViewModel : INotifyPropertyChanged
             // Позначаємо успішне завершення бінаризації перед оновленням інспектора
             IsBinarized = true;
 
+            // Оновлення або скидання виділення точки СКД при повторній бінаризації
+            if (SelectedTolerancePoint != null)
+            {
+                if (SelectedTolerancePoint.FeatureIndex < n)
+                {
+                    SelectToleranceFeatureIndex(SelectedTolerancePoint.FeatureIndex);
+                }
+                else
+                {
+                    ExecuteClearToleranceSelection();
+                }
+            }
+
             // 7. Оновлення перегляду інспектора бінарної матриці
             if (SelectedClassIndexForBinaryInspector >= m || SelectedClassIndexForBinaryInspector < 0)
             {
@@ -1647,7 +1723,7 @@ public class MainViewModel : INotifyPropertyChanged
                     $"• Найближчий сусід: {curNeighborName}\n" +
                     $"• Відстань між центрами D = 0 (центри еталонів повністю збіглися).\n\n" +
                     $"Таблицю відстаней та статистику сформовано. Побудову карти SK_MAP заблоковано через нульову відстань між центрами.\n" +
-                    $"Порада: зменшіть крок допуску δ на вкладці ЛР №13.",
+                    $"Порада: змініть крок допуску δ на вкладці ЛР №13.",
                     "Кодові відстані розраховано (D = 0)",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -1688,11 +1764,13 @@ public class MainViewModel : INotifyPropertyChanged
             IsCentersCoincide = false;
             NearestNeighborName = "Ще не визначено";
             DistancesInspectorInfo = "Оберіть клас та розрахуйте кодові відстані для перегляду.";
+            ExecuteClearSkMapSelection();
             return;
         }
 
         try
         {
+            ExecuteClearSkMapSelection();
             int m = SelectedDistanceClassIndex;
             int p = RecognitionObj.PARA[m];
             int l = RecognitionObj.L;
@@ -1793,6 +1871,8 @@ public class MainViewModel : INotifyPropertyChanged
         SelectedBinaryOnesCount = 0;
         SelectedBinaryOnesPercentage = 0.0;
 
+        ExecuteClearToleranceSelection();
+
         // Скидання стану ЛР №14
         IsDistancesComputed = false;
         DistancesDataView = null;
@@ -1803,6 +1883,8 @@ public class MainViewModel : INotifyPropertyChanged
         NearestNeighborName = "Ще не визначено";
         DistancesInspectorInfo = "Бінаризацію оновлено. Виконайте розрахунок кодових відстаней.";
 
+        ExecuteClearSkMapSelection();
+
         NotifyCountersChanged();
     }
 
@@ -1812,6 +1894,279 @@ public class MainViewModel : INotifyPropertyChanged
         {
             LoadedClasses[i].ClassIndex = i + 1;
         }
+    }
+
+    // ==========================================
+    // ЛОГІКА ІНТЕРАКТИВНИХ ГРАФІКІВ (СКД ТА SK_MAP)
+    // ==========================================
+
+    private void ExecuteSelectToleranceChartPoint(object? param)
+    {
+        if (!IsBinarized || MatrixN <= 1 || RecognitionObj.Y == null || RecognitionObj.MeanVector == null)
+            return;
+
+        if (param is CanvasClickInfo clickInfo)
+        {
+            double xMin = 45.0;
+            double xMax = 665.0;
+            double xSpan = xMax - xMin;
+
+            double relX = (clickInfo.X - xMin) / xSpan;
+            int i = (int)Math.Round(relX * (MatrixN - 1));
+            i = Math.Clamp(i, 0, MatrixN - 1);
+            SelectToleranceFeatureIndex(i);
+        }
+    }
+
+    private void SelectToleranceFeatureIndex(int i)
+    {
+        if (RecognitionObj.MeanVector == null || RecognitionObj.ND == null || RecognitionObj.VD == null || MatrixN <= 1)
+            return;
+
+        i = Math.Clamp(i, 0, MatrixN - 1);
+
+        var evParts = new List<string>();
+        for (int c = 0; c < RecognitionObj.M; c++)
+        {
+            string cName = (c < LoadedClasses.Count) ? LoadedClasses[c].ClassName : $"Клас {c + 1}";
+            int evBit = (RecognitionObj.EV != null && c < RecognitionObj.EV.Length && i < RecognitionObj.EV[c].Length)
+                ? RecognitionObj.EV[c][i] : 0;
+            evParts.Add($"{cName} = {evBit}");
+        }
+        string evSummary = "EV: " + string.Join(", ", evParts);
+
+        double xMin = 45.0;
+        double xMax = 665.0;
+        double xSpan = xMax - xMin;
+
+        double yTop = 15.0;
+        double yBottom = 185.0;
+        double ySpan = yBottom - yTop;
+
+        double xCoord = xMin + ((double)i / (MatrixN - 1)) * xSpan;
+        double meanVal = Math.Clamp(RecognitionObj.MeanVector[i], 0.0, 255.0);
+        double yMean = yBottom - (meanVal / 255.0) * ySpan;
+        double ndVal = Math.Clamp(RecognitionObj.ND[i], -15.0, 270.0);
+        double yNd = yBottom - (ndVal / 255.0) * ySpan;
+        double vdVal = Math.Clamp(RecognitionObj.VD[i], -15.0, 270.0);
+        double yVd = yBottom - (vdVal / 255.0) * ySpan;
+
+        SelectedTolerancePoint = new TolerancePointDetails
+        {
+            FeatureIndex = i,
+            TotalFeatures = MatrixN,
+            Mean = RecognitionObj.MeanVector[i],
+            VD = RecognitionObj.VD[i],
+            ND = RecognitionObj.ND[i],
+            StepKD = StepKD,
+            EvSummary = evSummary,
+            CanvasX = xCoord,
+            MeanCanvasY = yMean,
+            VdCanvasY = yVd,
+            NdCanvasY = yNd
+        };
+    }
+
+    private void ExecutePrevToleranceFeature(object? param)
+    {
+        if (SelectedTolerancePoint != null && SelectedTolerancePoint.FeatureIndex > 0)
+        {
+            SelectToleranceFeatureIndex(SelectedTolerancePoint.FeatureIndex - 1);
+        }
+    }
+
+    private void ExecuteNextToleranceFeature(object? param)
+    {
+        if (SelectedTolerancePoint != null && SelectedTolerancePoint.FeatureIndex < MatrixN - 1)
+        {
+            SelectToleranceFeatureIndex(SelectedTolerancePoint.FeatureIndex + 1);
+        }
+    }
+
+    private void ExecuteClearToleranceSelection(object? param = null)
+    {
+        SelectedTolerancePoint = null;
+    }
+
+    private void ExecuteSelectSkMapCenter(string? centerId)
+    {
+        if (!IsDistancesComputed || IsCentersCoincide || string.IsNullOrEmpty(centerId) ||
+            RecognitionObj.SK == null || RecognitionObj.SK_PARA == null || RecognitionObj.PARA == null)
+        {
+            return;
+        }
+
+        int m = SelectedDistanceClassIndex;
+        if (m < 0 || m >= RecognitionObj.M) return;
+        int p = RecognitionObj.PARA[m];
+        int l = RecognitionObj.L;
+        if (l <= 0) return;
+
+        string currentName = (LoadedClasses.Count > m) ? LoadedClasses[m].ClassName : $"Клас {m + 1}";
+        string neighborName = (LoadedClasses.Count > p) ? LoadedClasses[p].ClassName : $"Клас {p + 1}";
+
+        if (centerId == "C1")
+        {
+            int[] distances = RecognitionObj.SK[m][0];
+            int rMin = int.MaxValue;
+            int rMax = int.MinValue;
+            long sum = 0;
+            int farthestIndex = 0;
+
+            for (int j = 0; j < l; j++)
+            {
+                int val = distances[j];
+                if (val < rMin) rMin = val;
+                if (val > rMax)
+                {
+                    rMax = val;
+                    farthestIndex = j;
+                }
+                sum += val;
+            }
+            double rAvg = (double)sum / l;
+
+            var farthestPoint = SkMapPoints.FirstOrDefault(pt => pt.IsCurrentClass && pt.RealizationIndex == farthestIndex + 1);
+            double cX = C1CanvasX;
+            double cY = C1CanvasY;
+            double rPx = rMax * SkMapScale;
+
+            SkMapSelection = new SkMapSelectionInfo
+            {
+                SelectionType = SkMapSelectionType.Center,
+                Title = $"Центр C1: «{currentName}» (0, 0)",
+                Details = $"Приблизний (макс.) радіус R_max = {rMax} біт (Min: {rMin}, Середнє: {rAvg:F2}) | Найдальша реалізація: l_{farthestIndex + 1}",
+                SubDetails = $"Кількість власних реалізацій: {l} | Масштаб: {SkMapScale:F2} px/біт",
+
+                IsCircleVisible = true,
+                CircleLeft = cX - rPx,
+                CircleTop = cY - rPx,
+                CircleDiameter = 2.0 * rPx,
+                CircleStroke = "#2563EB",
+                CircleFill = "#152563EB",
+
+                IsRadiusLineVisible = (farthestPoint != null),
+                RadiusLineX1 = cX,
+                RadiusLineY1 = cY,
+                RadiusLineX2 = farthestPoint?.CanvasX ?? cX,
+                RadiusLineY2 = farthestPoint?.CanvasY ?? cY,
+                RadiusLineStroke = "#2563EB",
+
+                IsHighlightVisible = true,
+                HighlightLeft = cX - 12.0,
+                HighlightTop = cY - 12.0,
+                HighlightDiameter = 24.0,
+                HighlightStroke = "#1E40AF"
+            };
+        }
+        else if (centerId == "C2")
+        {
+            int[] distances = RecognitionObj.SK_PARA[m][0];
+            int rMin = int.MaxValue;
+            int rMax = int.MinValue;
+            long sum = 0;
+            int farthestIndex = 0;
+
+            for (int j = 0; j < l; j++)
+            {
+                int val = distances[j];
+                if (val < rMin) rMin = val;
+                if (val > rMax)
+                {
+                    rMax = val;
+                    farthestIndex = j;
+                }
+                sum += val;
+            }
+            double rAvg = (double)sum / l;
+
+            var farthestPoint = SkMapPoints.FirstOrDefault(pt => !pt.IsCurrentClass && pt.RealizationIndex == farthestIndex + 1);
+            double cX = C2CanvasX;
+            double cY = C2CanvasY;
+            double rPx = rMax * SkMapScale;
+
+            SkMapSelection = new SkMapSelectionInfo
+            {
+                SelectionType = SkMapSelectionType.Center,
+                Title = $"Центр C2: «{neighborName}» ({CenterDistanceD}, 0)",
+                Details = $"Приблизний (макс.) радіус R_max = {rMax} біт (Min: {rMin}, Середнє: {rAvg:F2}) | Найдальша реалізація: l_{farthestIndex + 1}",
+                SubDetails = $"Кількість власних реалізацій: {l} | Масштаб: {SkMapScale:F2} px/біт",
+
+                IsCircleVisible = true,
+                CircleLeft = cX - rPx,
+                CircleTop = cY - rPx,
+                CircleDiameter = 2.0 * rPx,
+                CircleStroke = "#EA580C",
+                CircleFill = "#15EA580C",
+
+                IsRadiusLineVisible = (farthestPoint != null),
+                RadiusLineX1 = cX,
+                RadiusLineY1 = cY,
+                RadiusLineX2 = farthestPoint?.CanvasX ?? cX,
+                RadiusLineY2 = farthestPoint?.CanvasY ?? cY,
+                RadiusLineStroke = "#EA580C",
+
+                IsHighlightVisible = true,
+                HighlightLeft = cX - 12.0,
+                HighlightTop = cY - 12.0,
+                HighlightDiameter = 24.0,
+                HighlightStroke = "#9A3412"
+            };
+        }
+    }
+
+    private void ExecuteSelectSkMapPoint(SkMapPoint? pt)
+    {
+        if (!IsDistancesComputed || IsCentersCoincide || pt == null) return;
+
+        var coinciding = SkMapPoints.Where(p =>
+            Math.Abs(p.WorldX - pt.WorldX) < 0.001 &&
+            Math.Abs(p.WorldY - pt.WorldY) < 0.001).ToList();
+
+        string realizationText = $"l_{pt.RealizationIndex}";
+        string subDetails;
+        if (coinciding.Count > 1)
+        {
+            var names = coinciding.Select(p => $"{p.ClassName} l_{p.RealizationIndex}");
+            subDetails = $"Збігів у цій координаті ({coinciding.Count}): {string.Join(", ", names)}";
+        }
+        else
+        {
+            subDetails = "Унікальна координата на площині (перекриття відсутні)";
+        }
+
+        SkMapSelection = new SkMapSelectionInfo
+        {
+            SelectionType = SkMapSelectionType.Realization,
+            Title = $"Реалізація {realizationText} («{pt.ClassName}»)",
+            Details = $"Світові координати: X = {pt.WorldX:F2}, Y = {pt.WorldY:F2} | r₁ (до C1) = {pt.R1} біт, r₂ (до C2) = {pt.R2} біт",
+            SubDetails = subDetails,
+
+            IsCircleVisible = false,
+            IsRadiusLineVisible = false,
+
+            IsHighlightVisible = true,
+            HighlightLeft = pt.CanvasX - 9.0,
+            HighlightTop = pt.CanvasY - 9.0,
+            HighlightDiameter = 18.0,
+            HighlightStroke = pt.PointStroke,
+
+            IsTriangulationVisible = true,
+            TriLine1X1 = pt.CanvasX,
+            TriLine1Y1 = pt.CanvasY,
+            TriLine1X2 = C1CanvasX,
+            TriLine1Y2 = C1CanvasY,
+
+            TriLine2X1 = pt.CanvasX,
+            TriLine2Y1 = pt.CanvasY,
+            TriLine2X2 = C2CanvasX,
+            TriLine2Y2 = C2CanvasY
+        };
+    }
+
+    private void ExecuteClearSkMapSelection()
+    {
+        SkMapSelection = new SkMapSelectionInfo();
     }
 
     private void NotifyCountersChanged()

@@ -208,6 +208,7 @@
         </Style>
 
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <controls:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter" />
     </Window.Resources>
 
     <Grid Margin="18,14,18,14">
@@ -262,7 +263,7 @@
                     </StackPanel>
                 </TabItem.Header>
 
-                <Grid Margin="0,0,0,0">
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="450" MinWidth="420" MaxWidth="560" />
                         <ColumnDefinition Width="10" />
@@ -667,7 +668,7 @@
                     </StackPanel>
                 </TabItem.Header>
 
-                <Grid Margin="0,10,0,0">
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="450" MinWidth="420" MaxWidth="560" />
                         <ColumnDefinition Width="10" />
@@ -880,6 +881,7 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
                                     <!-- Graph Header & Legend -->
@@ -930,9 +932,11 @@
                                             </StackPanel>
 
                                             <!-- Rendered Canvas when binarized -->
-                                            <Viewbox Stretch="Fill" Height="195"
+                                            <Viewbox Stretch="Uniform" Height="195" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                      Visibility="{Binding IsBinarized, Converter={StaticResource BoolToVisConverter}}">
-                                                <Canvas Width="700" Height="200" Background="Transparent">
+                                                <Canvas Width="700" Height="200" Background="Transparent"
+                                                        controls:CanvasClickBehavior.ClickCommand="{Binding SelectToleranceChartPointCommand}"
+                                                        Cursor="Cross">
                                                     <!-- Background gridlines -->
                                                     <Line X1="45" Y1="15" X2="665" Y2="15" Stroke="#E2E8F0" StrokeThickness="1" StrokeDashArray="3,3" />
                                                     <TextBlock Text="255" Canvas.Left="15" Canvas.Top="8" FontSize="10" Foreground="#94A3B8" />
@@ -956,12 +960,98 @@
                                                     <Polyline Points="{Binding ToleranceMeanPoints}" Stroke="#2563EB" StrokeThickness="2.2" StrokeLineJoin="Round" />
                                                     <Polyline Points="{Binding ToleranceNDPoints}" Stroke="#D97706" StrokeThickness="2" StrokeLineJoin="Round" />
 
+                                                    <!-- Interactive Overlays for Selected Feature -->
+                                                    <!-- Crosshair Vertical Line -->
+                                                    <Line X1="{Binding SelectedTolerancePoint.CanvasX}" Y1="15"
+                                                          X2="{Binding SelectedTolerancePoint.CanvasX}" Y2="185"
+                                                          Stroke="#64748B" StrokeThickness="1.5" StrokeDashArray="3,2"
+                                                          IsHitTestVisible="False"
+                                                          Visibility="{Binding HasSelectedTolerancePoint, Converter={StaticResource BoolToVisConverter}}" />
+
+                                                    <!-- Marker on VD -->
+                                                    <Ellipse Width="8" Height="8"
+                                                             Canvas.Left="{Binding SelectedTolerancePoint.CanvasX}"
+                                                             Canvas.Top="{Binding SelectedTolerancePoint.VdCanvasY}"
+                                                             Margin="-4,-4,0,0"
+                                                             Fill="#059669" Stroke="White" StrokeThickness="1.5"
+                                                             IsHitTestVisible="False"
+                                                             Visibility="{Binding HasSelectedTolerancePoint, Converter={StaticResource BoolToVisConverter}}" />
+
+                                                    <!-- Marker on Mean -->
+                                                    <Ellipse Width="8" Height="8"
+                                                             Canvas.Left="{Binding SelectedTolerancePoint.CanvasX}"
+                                                             Canvas.Top="{Binding SelectedTolerancePoint.MeanCanvasY}"
+                                                             Margin="-4,-4,0,0"
+                                                             Fill="#2563EB" Stroke="White" StrokeThickness="1.5"
+                                                             IsHitTestVisible="False"
+                                                             Visibility="{Binding HasSelectedTolerancePoint, Converter={StaticResource BoolToVisConverter}}" />
+
+                                                    <!-- Marker on ND -->
+                                                    <Ellipse Width="8" Height="8"
+                                                             Canvas.Left="{Binding SelectedTolerancePoint.CanvasX}"
+                                                             Canvas.Top="{Binding SelectedTolerancePoint.NdCanvasY}"
+                                                             Margin="-4,-4,0,0"
+                                                             Fill="#D97706" Stroke="White" StrokeThickness="1.5"
+                                                             IsHitTestVisible="False"
+                                                             Visibility="{Binding HasSelectedTolerancePoint, Converter={StaticResource BoolToVisConverter}}" />
+
                                                     <!-- X Axis labels -->
                                                     <TextBlock Text="Ознаки розпізнавання (i = 1..N)" Canvas.Left="270" Canvas.Top="187" FontSize="10" Foreground="#64748B" FontWeight="SemiBold" />
                                                     <TextBlock Text="1" Canvas.Left="45" Canvas.Top="187" FontSize="10" Foreground="#64748B" />
                                                     <TextBlock Text="{Binding MatrixN, StringFormat='N={0}'}" Canvas.Left="640" Canvas.Top="187" FontSize="10" Foreground="#64748B" />
                                                 </Canvas>
                                             </Viewbox>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Row 2: Interactive Feature Inspector Strip -->
+                                    <Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,8,0,0"
+                                            Visibility="{Binding IsBinarized, Converter={StaticResource BoolToVisConverter}}">
+                                        <Grid>
+                                            <!-- State A: Feature selected -->
+                                            <Grid Visibility="{Binding HasSelectedTolerancePoint, Converter={StaticResource BoolToVisConverter}}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,10,0">
+                                                        <TextBlock Text="{Binding SelectedTolerancePoint.FeatureNumber, StringFormat='Ознака #{0}'}"
+                                                                   FontWeight="Bold" Foreground="#1E40AF" FontSize="11" />
+                                                    </Border>
+
+                                                    <TextBlock FontSize="11" Foreground="#334155" VerticalAlignment="Center">
+                                                        <Run Text="VD = " FontWeight="SemiBold" Foreground="#065F46" /><Run Text="{Binding SelectedTolerancePoint.VD, StringFormat='{}{0:F2}'}" FontWeight="Bold" Foreground="#065F46" />
+                                                        <Run Text=" | M = " FontWeight="SemiBold" Foreground="#1E40AF" /><Run Text="{Binding SelectedTolerancePoint.Mean, StringFormat='{}{0:F2}'}" FontWeight="Bold" Foreground="#1E40AF" />
+                                                        <Run Text=" | ND = " FontWeight="SemiBold" Foreground="#92400E" /><Run Text="{Binding SelectedTolerancePoint.ND, StringFormat='{}{0:F2}'}" FontWeight="Bold" Foreground="#92400E" />
+                                                        <Run Text=" (δ = " Foreground="#64748B" /><Run Text="{Binding SelectedTolerancePoint.StepKD}" Foreground="#64748B" /><Run Text=")" Foreground="#64748B" />
+                                                        <Run Text="  •  " Foreground="#CBD5E1" />
+                                                        <Run Text="{Binding SelectedTolerancePoint.EvSummary}" Foreground="#475569" FontWeight="Medium" />
+                                                    </TextBlock>
+                                                </StackPanel>
+
+                                                <!-- Prev / Next / Clear buttons -->
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Command="{Binding PrevToleranceFeatureCommand}" ToolTip="Попередня ознака (i-1)"
+                                                            Background="White" BorderBrush="#CBD5E1" BorderThickness="1" Padding="6,2" Margin="0,0,4,0" Cursor="Hand">
+                                                        <TextBlock Text="◀" FontSize="10" Foreground="#334155" />
+                                                    </Button>
+                                                    <Button Command="{Binding NextToleranceFeatureCommand}" ToolTip="Наступна ознака (i+1)"
+                                                            Background="White" BorderBrush="#CBD5E1" BorderThickness="1" Padding="6,2" Margin="0,0,6,0" Cursor="Hand">
+                                                        <TextBlock Text="▶" FontSize="10" Foreground="#334155" />
+                                                    </Button>
+                                                    <Button Command="{Binding ClearToleranceSelectionCommand}" ToolTip="Зняти виділення"
+                                                            Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1" Padding="6,2" Cursor="Hand">
+                                                        <TextBlock Text="✕" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- State B: No feature selected placeholder -->
+                                            <TextBlock Text="💡 Клікніть по графіку, щоб переглянути точні значення VD, M, ND та еталонів EV для ознаки"
+                                                       FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"
+                                                       Visibility="{Binding HasSelectedTolerancePoint, Converter={StaticResource InverseBoolToVisConverter}}" />
                                         </Grid>
                                     </Border>
                                 </Grid>
@@ -1153,7 +1243,7 @@
                     </StackPanel>
                 </TabItem.Header>
 
-                <Grid Margin="0,14,0,0">
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="340" />
                         <ColumnDefinition Width="14" />
@@ -1369,6 +1459,7 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
                                     <!-- Header and Legends -->
@@ -1422,7 +1513,7 @@
                                                     <TextBlock Text="⚠️ Центри еталонів повністю збіглися (D = 0)" FontWeight="Bold" Foreground="#92400E" FontSize="13" Margin="0,0,0,6" />
                                                     <TextBlock Text="Відстань між двійковими еталонними векторами поточного класу та його сусіда становить D = 0 біт (образи стали нерозрізними за Хеммінгом). Побудова 2D-карти триангуляції неможлива через ділення на нуль."
                                                                Foreground="#B45309" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6" />
-                                                    <TextBlock Text="Таблицю значень SK та статистику сформовано повністю (див. інспектор нижче). Для відновлення графічної карти зменшіть крок допуску δ на вкладці ЛР №13."
+                                                    <TextBlock Text="Таблицю значень SK та статистику сформовано повністю (див. інспектор нижче). Для відновлення графічної карти змініть крок допуску δ на вкладці ЛР №13."
                                                                Foreground="#B45309" FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap" />
                                                 </StackPanel>
                                             </Border>
@@ -1430,7 +1521,8 @@
                                             <!-- State 3: Active Canvas when D > 0 -->
                                             <Viewbox Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                      Visibility="{Binding IsDistancesComputed, Converter={StaticResource BoolToVisConverter}}">
-                                                <Canvas Width="720" Height="280" Background="Transparent" ClipToBounds="True">
+                                                <Canvas Width="720" Height="280" Background="Transparent" ClipToBounds="True"
+                                                        controls:CanvasClickBehavior.ClickCommand="{Binding ClearSkMapSelectionCommand}">
                                                     <!-- Axis line connecting centers through Y = AxisLineY -->
                                                     <Line X1="{Binding AxisLineX1}" Y1="{Binding AxisLineY}"
                                                           X2="{Binding AxisLineX2}" Y2="{Binding AxisLineY}"
@@ -1440,25 +1532,79 @@
                                                                Canvas.Left="{Binding AxisLabelCanvasX}" Canvas.Top="{Binding AxisLineY}"
                                                                Margin="0,4,0,0" FontSize="10" Foreground="#64748B" FontWeight="Medium" />
 
+                                                    <!-- INTERACTIVE OVERLAYS LAYER (Under markers and points) -->
+                                                    <!-- Center Approximate Radius Circle -->
+                                                    <Ellipse Width="{Binding SkMapSelection.CircleDiameter}"
+                                                             Height="{Binding SkMapSelection.CircleDiameter}"
+                                                             Canvas.Left="{Binding SkMapSelection.CircleLeft}"
+                                                             Canvas.Top="{Binding SkMapSelection.CircleTop}"
+                                                             Stroke="{Binding SkMapSelection.CircleStroke}"
+                                                             StrokeThickness="1.5" StrokeDashArray="4,3"
+                                                             Fill="{Binding SkMapSelection.CircleFill}"
+                                                             IsHitTestVisible="False"
+                                                             Visibility="{Binding SkMapSelection.IsCircleVisible, Converter={StaticResource BoolToVisConverter}}" />
+
+                                                    <!-- Center Radius Vector Line -->
+                                                    <Line X1="{Binding SkMapSelection.RadiusLineX1}" Y1="{Binding SkMapSelection.RadiusLineY1}"
+                                                          X2="{Binding SkMapSelection.RadiusLineX2}" Y2="{Binding SkMapSelection.RadiusLineY2}"
+                                                          Stroke="{Binding SkMapSelection.RadiusLineStroke}"
+                                                          StrokeThickness="1.5" StrokeDashArray="3,2"
+                                                          IsHitTestVisible="False"
+                                                          Visibility="{Binding SkMapSelection.IsRadiusLineVisible, Converter={StaticResource BoolToVisConverter}}" />
+
+                                                    <!-- Triangulation Lines from Point to C1 and C2 -->
+                                                    <Line X1="{Binding SkMapSelection.TriLine1X1}" Y1="{Binding SkMapSelection.TriLine1Y1}"
+                                                          X2="{Binding SkMapSelection.TriLine1X2}" Y2="{Binding SkMapSelection.TriLine1Y2}"
+                                                          Stroke="#2563EB" StrokeThickness="1.2" StrokeDashArray="3,2"
+                                                          IsHitTestVisible="False"
+                                                          Visibility="{Binding SkMapSelection.IsTriangulationVisible, Converter={StaticResource BoolToVisConverter}}" />
+                                                    <Line X1="{Binding SkMapSelection.TriLine2X1}" Y1="{Binding SkMapSelection.TriLine2Y1}"
+                                                          X2="{Binding SkMapSelection.TriLine2X2}" Y2="{Binding SkMapSelection.TriLine2Y2}"
+                                                          Stroke="#EA580C" StrokeThickness="1.2" StrokeDashArray="3,2"
+                                                          IsHitTestVisible="False"
+                                                          Visibility="{Binding SkMapSelection.IsTriangulationVisible, Converter={StaticResource BoolToVisConverter}}" />
+
+                                                    <!-- Highlight Ring around selected Center or Realization Point -->
+                                                    <Ellipse Width="{Binding SkMapSelection.HighlightDiameter}"
+                                                             Height="{Binding SkMapSelection.HighlightDiameter}"
+                                                             Canvas.Left="{Binding SkMapSelection.HighlightLeft}"
+                                                             Canvas.Top="{Binding SkMapSelection.HighlightTop}"
+                                                             Stroke="{Binding SkMapSelection.HighlightStroke}"
+                                                             StrokeThickness="2" Fill="Transparent"
+                                                             IsHitTestVisible="False"
+                                                             Visibility="{Binding SkMapSelection.IsHighlightVisible, Converter={StaticResource BoolToVisConverter}}" />
+
                                                     <!-- Center C1(0, 0) Marker -->
-                                                    <Ellipse Width="16" Height="16"
-                                                             Canvas.Left="{Binding C1CanvasX}" Canvas.Top="{Binding C1CanvasY}"
-                                                             Margin="-8,-8,0,0"
-                                                             Fill="#2563EB" Stroke="White" StrokeThickness="2.5" />
+                                                    <Grid Canvas.Left="{Binding C1CanvasX}" Canvas.Top="{Binding C1CanvasY}"
+                                                          Width="32" Height="32" Margin="-16,-16,0,0" Background="Transparent" Cursor="Hand" Tag="InteractiveMarker">
+                                                        <Grid.InputBindings>
+                                                            <MouseBinding MouseAction="LeftClick"
+                                                                          Command="{Binding SelectSkMapCenterCommand}"
+                                                                          CommandParameter="C1" />
+                                                        </Grid.InputBindings>
+                                                        <Ellipse Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                 Fill="#2563EB" Stroke="White" StrokeThickness="2.5" />
+                                                    </Grid>
                                                     <TextBlock Text="C1 (0, 0)"
                                                                Canvas.Left="{Binding C1CanvasX}" Canvas.Top="{Binding C1CanvasY}"
                                                                Margin="-24,-24,0,0"
-                                                               FontSize="11" FontWeight="Bold" Foreground="#1E40AF" />
+                                                               FontSize="11" FontWeight="Bold" Foreground="#1E40AF" IsHitTestVisible="False" />
 
                                                     <!-- Center C2(D, 0) Marker -->
-                                                    <Ellipse Width="16" Height="16"
-                                                             Canvas.Left="{Binding C2CanvasX}" Canvas.Top="{Binding C2CanvasY}"
-                                                             Margin="-8,-8,0,0"
-                                                             Fill="#EA580C" Stroke="White" StrokeThickness="2.5" />
+                                                    <Grid Canvas.Left="{Binding C2CanvasX}" Canvas.Top="{Binding C2CanvasY}"
+                                                          Width="32" Height="32" Margin="-16,-16,0,0" Background="Transparent" Cursor="Hand" Tag="InteractiveMarker">
+                                                        <Grid.InputBindings>
+                                                            <MouseBinding MouseAction="LeftClick"
+                                                                          Command="{Binding SelectSkMapCenterCommand}"
+                                                                          CommandParameter="C2" />
+                                                        </Grid.InputBindings>
+                                                        <Ellipse Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                 Fill="#EA580C" Stroke="White" StrokeThickness="2.5" />
+                                                    </Grid>
                                                     <TextBlock Text="{Binding CenterDistanceD, StringFormat='C2 ({0}, 0)'}"
                                                                Canvas.Left="{Binding C2CanvasX}" Canvas.Top="{Binding C2CanvasY}"
                                                                Margin="-26,-24,0,0"
-                                                               FontSize="11" FontWeight="Bold" Foreground="#9A3412" />
+                                                               FontSize="11" FontWeight="Bold" Foreground="#9A3412" IsHitTestVisible="False" />
 
                                                     <!-- Realization Points -->
                                                     <ItemsControl ItemsSource="{Binding SkMapPoints}">
@@ -1475,15 +1621,55 @@
                                                         </ItemsControl.ItemContainerStyle>
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
-                                                                <Ellipse Width="7" Height="7" Margin="-3.5,-3.5,0,0"
-                                                                         Fill="{Binding PointColor}" Stroke="{Binding PointStroke}"
-                                                                         StrokeThickness="1"
-                                                                         ToolTip="{Binding TooltipText}" Cursor="Hand" />
+                                                                <Grid Width="18" Height="18" Margin="-9,-9,0,0" Background="Transparent" Cursor="Hand" Tag="InteractiveMarker">
+                                                                    <Grid.InputBindings>
+                                                                        <MouseBinding MouseAction="LeftClick"
+                                                                                      Command="{Binding DataContext.SelectSkMapPointCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                      CommandParameter="{Binding}" />
+                                                                    </Grid.InputBindings>
+                                                                    <Ellipse Width="7" Height="7" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                             Fill="{Binding PointColor}" Stroke="{Binding PointStroke}"
+                                                                             StrokeThickness="1"
+                                                                             ToolTip="{Binding TooltipText}" />
+                                                                </Grid>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
                                                 </Canvas>
                                             </Viewbox>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Row 3: Interactive SK_MAP Selection Details Strip -->
+                                    <Border Grid.Row="3" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,8,0,0"
+                                            Visibility="{Binding IsDistancesComputed, Converter={StaticResource BoolToVisConverter}}">
+                                        <Grid>
+                                            <!-- State A: Something is selected -->
+                                            <Grid Visibility="{Binding SkMapSelection.HasSelection, Converter={StaticResource BoolToVisConverter}}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock FontSize="12" FontWeight="Bold" Foreground="#0F172A" Text="{Binding SkMapSelection.Title}" />
+                                                    <TextBlock FontSize="11" Foreground="#334155" Margin="0,2,0,0">
+                                                        <Run Text="{Binding SkMapSelection.Details}" FontWeight="Medium" />
+                                                        <Run Text="  •  " Foreground="#CBD5E1" />
+                                                        <Run Text="{Binding SkMapSelection.SubDetails}" Foreground="#64748B" />
+                                                    </TextBlock>
+                                                </StackPanel>
+
+                                                <Button Grid.Column="1" Command="{Binding ClearSkMapSelectionCommand}" ToolTip="Зняти виділення"
+                                                        Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1" Padding="6,2" Cursor="Hand" VerticalAlignment="Center">
+                                                    <TextBlock Text="✕" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                                </Button>
+                                            </Grid>
+
+                                            <!-- State B: Nothing is selected placeholder -->
+                                            <TextBlock Text="💡 Клікніть на центр C1/C2 для перегляду приблизного радіуса класу або на будь-яку точку реалізації для перегляду координат та відстаней"
+                                                       FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"
+                                                       Visibility="{Binding SkMapSelection.HasSelection, Converter={StaticResource InverseBoolToVisConverter}}" />
                                         </Grid>
                                     </Border>
                                 </Grid>
@@ -1612,7 +1798,7 @@
                     </StackPanel>
                 </TabItem.Header>
 
-                <ScrollViewer Margin="0,14,0,0">
+                <ScrollViewer Margin="0,4,0,0">
                     <StackPanel MaxWidth="900" HorizontalAlignment="Left">
                         <Border Style="{StaticResource CardBorderStyle}">
                             <StackPanel>
