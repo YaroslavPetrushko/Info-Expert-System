@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:Info_Extreme_System.ViewModels"
         xmlns:controls="clr-namespace:Info_Extreme_System.Controls"
         mc:Ignorable="d"
-        Title="ІЕІТ — Система розпізнавання образів (Лабораторна робота №12)"
+        Title="ІЕІТ — Система розпізнавання образів"
         Height="860" Width="1340"
         MinHeight="720" MinWidth="1120"
         WindowStartupLocation="CenterScreen"
@@ -233,10 +233,10 @@
                         <TextBlock Text="Інформаційно-Екстремальна Інтелектуальна Технологія (ІЕІТ)"
                                    FontSize="18" FontWeight="Bold" Foreground="#0F172A" />
                         <Border Background="#DBEAFE" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="8,3" Margin="12,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="Лабораторна робота №12" FontSize="11" FontWeight="SemiBold" Foreground="#1E40AF" />
+                            <TextBlock Text="ІЕІТ • ЛР №12–15" FontSize="11" FontWeight="SemiBold" Foreground="#1E40AF" />
                         </Border>
                     </StackPanel>
-                    <TextBlock Text="Формування вхідного математичного опису та навчальної матриці Y типу «об'єкт-властивість»"
+                    <TextBlock Text="Комплексна система розпізнавання образів на базі інформаційно-екстремальної технології (ІЕІТ)"
                                FontSize="12" Foreground="#64748B" Margin="0,4,0,0" />
                 </StackPanel>
 
@@ -1141,7 +1141,7 @@
                 </Grid>
             </TabItem>
 
-            <!-- TAB 3: ЛР 14 (PREVIEW) -->
+            <!-- TAB 3: ЛР 14 (ACTIVE) -->
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -1153,28 +1153,399 @@
                     </StackPanel>
                 </TabItem.Header>
 
-                <ScrollViewer Margin="0,14,0,0">
-                    <StackPanel MaxWidth="900" HorizontalAlignment="Left">
-                        <Border Style="{StaticResource CardBorderStyle}">
-                            <StackPanel>
-                                <TextBlock Text="Лабораторна робота №14: Формування масиву кодових відстаней SK від центрів класів до їх реалізацій"
-                                           FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,10" />
-                                <TextBlock Text="Етапи виконання у ЛР №14:" FontSize="13" Foreground="#475569" Margin="0,0,0,10" />
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="340" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                                <TextBlock Margin="10,3" Foreground="#334155">
-                                    • <Bold>Визначення сусідніх класів PARA[M]:</Bold> знаходження для кожного класу найближчого за кодовою відстанню класу-конкурента.
-                                </TextBlock>
-                                <TextBlock Margin="10,3" Foreground="#334155">
-                                    • <Bold>Розрахунок відстаней за Хеммінгом SK[M][2][L]:</Bold> обчислення кодових відстаней від геометричного центру поточного класу до власних реалізацій SK[c][0][j] та до реалізацій сусіднього класу SK[c][1][j].
-                                </TextBlock>
+                    <!-- LEFT PANEL: CONTROLS, PARAMS & STATS -->
+                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
 
-                                <Separator Margin="0,14,0,14" Background="#E2E8F0" />
-                                <TextBlock Text="Поточний стан структури даних trecognition_obj:" FontWeight="SemiBold" Margin="0,0,0,6" />
-                                <TextBlock Text="{Binding MatrixFormedStatusText}" Foreground="{Binding MatrixStatusBrush}" FontWeight="SemiBold" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            <!-- Prerequisite Alert when Y or Binarization not done -->
+                            <Border Background="#FEF3C7" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12"
+                                    Visibility="{Binding IsBinarizePending, Converter={StaticResource BoolToVisConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="⚠️ Потрібна попередня бінаризація" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,4" />
+                                    <TextBlock Text="Перейдіть на вкладку «ЛР №13: Бінаризація та СКД» та виконайте побудову СКД і бінаризацію."
+                                               FontSize="12" Foreground="#B45309" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- CARD 1: PARAMETERS OF CODE DISTANCES & PARA -->
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <Path Data="{StaticResource IconSliders}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Параметри кодових відстаней" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- Current Class Selection -->
+                                    <TextBlock Text="Поточний клас розпізнавання (m):" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,4" />
+                                    <ComboBox ItemsSource="{Binding LoadedClasses}"
+                                              DisplayMemberPath="ClassName"
+                                              SelectedIndex="{Binding SelectedDistanceClassIndex}"
+                                              Padding="6" Margin="0,0,0,4" />
+                                    <TextBlock Text="Визначає клас для перегляду відстаней SK та карти SK_MAP відносно його сусіда PARA[m]"
+                                               FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+                                    <!-- Found Neighbor Info Card -->
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,12">
+                                        <StackPanel>
+                                            <TextBlock Text="Найближчий сусід-конкурент (PARA):" FontSize="11" Foreground="#64748B" />
+                                            <TextBlock Text="{Binding NearestNeighborName}" FontWeight="Bold" Foreground="#0F172A" FontSize="12" Margin="0,2,0,4" />
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Відстань між центрами D = " FontSize="11" Foreground="#64748B" VerticalAlignment="Center" />
+                                                <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding CenterDistanceD, StringFormat='{}{0} біт'}" FontWeight="Bold" Foreground="#1E40AF" FontSize="11" />
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Compute Distances Action Button -->
+                                    <Button Style="{StaticResource SuccessButtonStyle}"
+                                            Command="{Binding ComputeDistancesCommand}"
+                                            FontSize="13">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Path Data="{StaticResource IconNodes}" Width="16" Height="16" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                  StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                                            <TextBlock Text="РОЗРАХУВАТИ SK ТА SK_MAP" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- CARD 2: QUANTITATIVE CHARACTERISTICS -->
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <Path Data="{StaticResource IconChart}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Кількісні характеристики (SK, PARA)" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Відстань між еталонами (D):" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
+                                            <TextBlock Text="{Binding CenterDistanceD}" FontWeight="Bold" Foreground="#0F172A" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Кількість реалізацій (l):" Foreground="#475569" VerticalAlignment="Center" />
+                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,2">
+                                            <TextBlock Text="{Binding MatrixL}" FontWeight="Bold" Foreground="#0F172A" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Separator Margin="0,8,0,8" Background="#E2E8F0" />
+
+                                    <TextBlock Text="Статистика відстаней (Min / Max / Середнє):" FontWeight="SemiBold" FontSize="11" Foreground="#334155" Margin="0,0,0,6" />
+
+                                    <!-- SK[1]: Свій -> C1 -->
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="8,5" Margin="0,0,0,5">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="SK[1] (свій → C1):" FontWeight="SemiBold" Foreground="#1E40AF" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" FontSize="11" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center">
+                                                <Run Text="{Binding DistanceStats.SkOwnMin, Mode=OneWay}" />
+                                                <Run Text=" / " Foreground="#94A3B8" />
+                                                <Run Text="{Binding DistanceStats.SkOwnMax, Mode=OneWay}" />
+                                                <Run Text=" / " Foreground="#94A3B8" />
+                                                <Run Text="{Binding DistanceStats.SkOwnAvg, Mode=OneWay, StringFormat='{}{0:F2}'}" Foreground="#2563EB" />
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- SK[2]: Сусід -> C1 -->
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="8,5" Margin="0,0,0,5">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="SK[2] (сусід → C1):" FontWeight="SemiBold" Foreground="#B45309" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" FontSize="11" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center">
+                                                <Run Text="{Binding DistanceStats.SkNeighborMin, Mode=OneWay}" />
+                                                <Run Text=" / " Foreground="#94A3B8" />
+                                                <Run Text="{Binding DistanceStats.SkNeighborMax, Mode=OneWay}" />
+                                                <Run Text=" / " Foreground="#94A3B8" />
+                                                <Run Text="{Binding DistanceStats.SkNeighborAvg, Mode=OneWay, StringFormat='{}{0:F2}'}" Foreground="#D97706" />
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- SK_PARA[1]: Сусід -> C2 -->
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="8,5" Margin="0,0,0,5">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="SK_PARA[1] (сусід → C2):" FontWeight="SemiBold" Foreground="#C2410C" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" FontSize="11" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center">
+                                                <Run Text="{Binding DistanceStats.SkParaNeighborMin, Mode=OneWay}" />
+                                                <Run Text=" / " Foreground="#94A3B8" />
+                                                <Run Text="{Binding DistanceStats.SkParaNeighborMax, Mode=OneWay}" />
+                                                <Run Text=" / " Foreground="#94A3B8" />
+                                                <Run Text="{Binding DistanceStats.SkParaNeighborAvg, Mode=OneWay, StringFormat='{}{0:F2}'}" Foreground="#EA580C" />
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- SK_PARA[2]: Свій -> C2 -->
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="8,5" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="SK_PARA[2] (свій → C2):" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" FontSize="11" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center">
+                                                <Run Text="{Binding DistanceStats.SkParaOwnMin, Mode=OneWay}" />
+                                                <Run Text=" / " Foreground="#94A3B8" />
+                                                <Run Text="{Binding DistanceStats.SkParaOwnMax, Mode=OneWay}" />
+                                                <Run Text=" / " Foreground="#94A3B8" />
+                                                <Run Text="{Binding DistanceStats.SkParaOwnAvg, Mode=OneWay, StringFormat='{}{0:F2}'}" Foreground="#334155" />
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <Separator Margin="0,4,0,8" Background="#E2E8F0" />
+                                    <TextBlock Text="Стан розрахунку кодових відстаней:" FontSize="11" Foreground="#64748B" />
+                                    <TextBlock Text="{Binding DistancesStatusText}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{Binding DistancesStatusBrush}"
+                                               TextWrapping="Wrap" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- CARD 3: LOG & EVENT JOURNAL -->
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <Path Data="{StaticResource IconList}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                              Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                        <TextBlock Text="Журнал подій" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <Border Background="#0F172A" CornerRadius="6" Padding="8" Height="130">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding LogMessages}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding}" Foreground="#E2E8F0" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Margin="0,1" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- RIGHT PANEL: SK_MAP MODULE & DISTANCES INSPECTOR -->
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+
+                            <!-- BLOCK A: SK_MAP 2D VISUALIZATION CANVAS -->
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Header and Legends -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Path Data="{StaticResource IconNodes}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                            <TextBlock Text="Модуль SK_MAP: Карта розподілу реалізацій на 2D-площині"
+                                                       FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                        </StackPanel>
+
+                                        <!-- Legend -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Ellipse Width="9" Height="9" Fill="#2563EB" Margin="0,0,4,0" />
+                                            <TextBlock Text="Поточний клас" FontSize="11" FontWeight="SemiBold" Foreground="#1E40AF" Margin="0,0,12,0" />
+
+                                            <Ellipse Width="9" Height="9" Fill="#EA580C" Margin="0,0,4,0" />
+                                            <TextBlock Text="Сусід PARA" FontSize="11" FontWeight="SemiBold" Foreground="#9A3412" Margin="0,0,12,0" />
+
+                                            <Border Background="#1E293B" CornerRadius="3" Width="9" Height="9" Margin="0,0,4,0" />
+                                            <TextBlock Text="Центри C1, C2" FontSize="11" FontWeight="SemiBold" Foreground="#334155" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Subtitle & Scale / Bounds details -->
+                                    <Grid Grid.Row="1" Margin="0,0,0,8">
+                                        <TextBlock Text="{Binding SkMapWorldBoundsText}" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" />
+                                    </Grid>
+
+                                    <!-- Canvas Drawing Area -->
+                                    <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Background="#F8FAFC" Height="285">
+                                        <Grid>
+                                            <!-- State 1: Pending calculation -->
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                        Visibility="{Binding IsDistancesPending, Converter={StaticResource BoolToVisConverter}}">
+                                                <TextBlock Text="📊 Карта SK_MAP очікує запуску розрахунку" FontWeight="SemiBold" Foreground="#94A3B8" FontSize="13" HorizontalAlignment="Center" />
+                                                <TextBlock Text="Оберіть клас та натисніть «РОЗРАХУВАТИ SK ТА SK_MAP» у панелі ліворуч."
+                                                           FontSize="11" Foreground="#CBD5E1" Margin="0,4,0,0" HorizontalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <!-- State 2: Warning when D == 0 (Coinciding centers) -->
+                                            <Border Background="#FEF3C7" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="8" Padding="16" Margin="16"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="600"
+                                                    Visibility="{Binding IsCentersCoincide, Converter={StaticResource BoolToVisConverter}}">
+                                                <StackPanel>
+                                                    <TextBlock Text="⚠️ Центри еталонів повністю збіглися (D = 0)" FontWeight="Bold" Foreground="#92400E" FontSize="13" Margin="0,0,0,6" />
+                                                    <TextBlock Text="Відстань між двійковими еталонними векторами поточного класу та його сусіда становить D = 0 біт (образи стали нерозрізними за Хеммінгом). Побудова 2D-карти триангуляції неможлива через ділення на нуль."
+                                                               Foreground="#B45309" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                                    <TextBlock Text="Таблицю значень SK та статистику сформовано повністю (див. інспектор нижче). Для відновлення графічної карти зменшіть крок допуску δ на вкладці ЛР №13."
+                                                               Foreground="#B45309" FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- State 3: Active Canvas when D > 0 -->
+                                            <Viewbox Stretch="Fill" Height="280"
+                                                     Visibility="{Binding IsDistancesComputed, Converter={StaticResource BoolToVisConverter}}">
+                                                <Canvas Width="720" Height="280" Background="Transparent" ClipToBounds="True">
+                                                    <!-- Axis line connecting centers through Y = AxisLineY -->
+                                                    <Line X1="{Binding AxisLineX1}" Y1="{Binding AxisLineY}"
+                                                          X2="{Binding AxisLineX2}" Y2="{Binding AxisLineY}"
+                                                          Stroke="#94A3B8" StrokeThickness="1.5" StrokeDashArray="4,4" />
+
+                                                    <TextBlock Text="Горизонтальна вісь центрів (y = 0)"
+                                                               Canvas.Left="265" Canvas.Top="{Binding AxisLineY}"
+                                                               Margin="0,4,0,0" FontSize="10" Foreground="#64748B" FontWeight="Medium" />
+
+                                                    <!-- Center C1(0, 0) Marker -->
+                                                    <Ellipse Width="16" Height="16"
+                                                             Canvas.Left="{Binding C1CanvasX}" Canvas.Top="{Binding C1CanvasY}"
+                                                             Margin="-8,-8,0,0"
+                                                             Fill="#2563EB" Stroke="White" StrokeThickness="2.5" />
+                                                    <TextBlock Text="C1 (0, 0)"
+                                                               Canvas.Left="{Binding C1CanvasX}" Canvas.Top="{Binding C1CanvasY}"
+                                                               Margin="-24,-24,0,0"
+                                                               FontSize="11" FontWeight="Bold" Foreground="#1E40AF" />
+
+                                                    <!-- Center C2(D, 0) Marker -->
+                                                    <Ellipse Width="16" Height="16"
+                                                             Canvas.Left="{Binding C2CanvasX}" Canvas.Top="{Binding C2CanvasY}"
+                                                             Margin="-8,-8,0,0"
+                                                             Fill="#EA580C" Stroke="White" StrokeThickness="2.5" />
+                                                    <TextBlock Text="{Binding CenterDistanceD, StringFormat='C2 ({0}, 0)'}"
+                                                               Canvas.Left="{Binding C2CanvasX}" Canvas.Top="{Binding C2CanvasY}"
+                                                               Margin="-26,-24,0,0"
+                                                               FontSize="11" FontWeight="Bold" Foreground="#9A3412" />
+
+                                                    <!-- Realization Points -->
+                                                    <ItemsControl ItemsSource="{Binding SkMapPoints}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <Canvas />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemContainerStyle>
+                                                            <Style TargetType="ContentPresenter">
+                                                                <Setter Property="Canvas.Left" Value="{Binding CanvasX}" />
+                                                                <Setter Property="Canvas.Top" Value="{Binding CanvasY}" />
+                                                            </Style>
+                                                        </ItemsControl.ItemContainerStyle>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Ellipse Width="7" Height="7" Margin="-3.5,-3.5,0,0"
+                                                                         Fill="{Binding PointColor}" Stroke="{Binding PointStroke}"
+                                                                         StrokeThickness="1"
+                                                                         ToolTip="{Binding TooltipText}" Cursor="Hand" />
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- BLOCK B: DISTANCES INSPECTOR (FastDataGrid) -->
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="240" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Controls Bar -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Path Data="{StaticResource IconSearch}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                                                  Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
+                                            <TextBlock Text="Інспектор кодових відстаней SK та SK_PARA" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" Margin="0,0,14,0" />
+                                        </StackPanel>
+
+                                        <Border Grid.Column="1" Background="#F1F5F9" CornerRadius="4" Padding="8,4">
+                                            <TextBlock Text="{Binding DistancesStatusText}" FontWeight="SemiBold" Foreground="#0F172A" FontSize="11" />
+                                        </Border>
+                                    </Grid>
+
+                                    <TextBlock Grid.Row="1" Text="{Binding DistancesInspectorInfo}" FontSize="11" Foreground="#64748B" Margin="0,0,0,6" />
+
+                                    <!-- FastDataGrid for Distances -->
+                                    <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Background="White">
+                                        <controls:FastDataGrid ItemsSource="{Binding DistancesDataView}"
+                                                              AutoGenerateColumns="True"
+                                                              IsReadOnly="True"
+                                                              CanUserAddRows="False"
+                                                              CanUserDeleteRows="False"
+                                                              EnableRowVirtualization="True"
+                                                              EnableColumnVirtualization="True"
+                                                              VirtualizingPanel.IsVirtualizing="True"
+                                                              VirtualizingPanel.VirtualizationMode="Recycling"
+                                                              GridLinesVisibility="All"
+                                                              HorizontalGridLinesBrush="#F1F5F9"
+                                                              VerticalGridLinesBrush="#F1F5F9"
+                                                              RowHeight="24"
+                                                              FontSize="12"
+                                                              BorderThickness="0" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
             </TabItem>
 
             <!-- TAB 4: ЛР 15 (PREVIEW) -->
@@ -1228,7 +1599,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Готово до роботи. Оберіть дію в панелі керування." FontSize="11" Foreground="#64748B" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Text="ІЕІТ • Лабораторна робота №12" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="ІЕІТ • СПР" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
             </Grid>
         </Border>
     </Grid>

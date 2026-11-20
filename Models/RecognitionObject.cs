@@ -174,6 +174,12 @@ public class RecognitionObject : INotifyPropertyChanged
     public int[][][] SK { get; set; } = Array.Empty<int[][]>();
 
     /// <summary>
+    /// Кодові відстані (за Хеммінгом) від центрів сусідів PARA[m] до власних реалізацій та реалізацій поточного класу:
+    /// SK_PARA [M][2][L], де [c][0][j] - від сусіда до своїх, [c][1][j] - від сусіда до класу c (для ЛР №14).
+    /// </summary>
+    public int[][][] SK_PARA { get; set; } = Array.Empty<int[][]>();
+
+    /// <summary>
     /// Значення критерію функціональної ефективності (КФЕ / критерій Кульбака)
     /// залежно від радіуса контейнера EM [M][N + 1] (для ЛР №15).
     /// </summary>
@@ -285,6 +291,15 @@ public class RecognitionObject : INotifyPropertyChanged
             SK[c] = new int[2][];
             SK[c][0] = new int[L];
             SK[c][1] = new int[L];
+        }
+
+        // Кодові відстані SK_PARA [M][2][L]
+        SK_PARA = new int[M][][];
+        for (int c = 0; c < M; c++)
+        {
+            SK_PARA[c] = new int[2][];
+            SK_PARA[c][0] = new int[L];
+            SK_PARA[c][1] = new int[L];
         }
 
         // Оптимізаційні масиви розміром [M][N + 1] (для радіусів d = 0..N)

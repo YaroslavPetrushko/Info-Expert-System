@@ -50,6 +50,26 @@ public class MainViewModel : INotifyPropertyChanged
     private PointCollection? _toleranceNDPoints;
     private PointCollection? _toleranceVDPoints;
 
+    // --- Поля вкладки 3 (ЛР №14: Кодові відстані SK та SK_MAP) ---
+    private bool _isDistancesComputed;
+    private int _selectedDistanceClassIndex = 0;
+    private int _nearestNeighborIndex;
+    private string _nearestNeighborName = "Ще не визначено";
+    private int _centerDistanceD;
+    private bool _isCentersCoincide;
+    private DistanceStatsInfo? _distanceStats;
+    private DataView? _distancesDataView;
+    private string _distancesInspectorInfo = "Оберіть клас та розрахуйте кодові відстані для перегляду.";
+    private double _c1CanvasX = 200.0;
+    private double _c1CanvasY = 140.0;
+    private double _c2CanvasX = 520.0;
+    private double _c2CanvasY = 140.0;
+    private double _axisLineX1 = 30.0;
+    private double _axisLineX2 = 690.0;
+    private double _axisLineY = 140.0;
+    private double _skMapScale = 1.0;
+    private string _skMapWorldBoundsText = string.Empty;
+
     public MainViewModel()
     {
         _imageService = new ImageProcessingService();
@@ -59,6 +79,7 @@ public class MainViewModel : INotifyPropertyChanged
         LogMessages = new ObservableCollection<string>();
         BinaryClassesStatistics = new ObservableCollection<BinaryClassStatInfo>();
         ReferenceVectors = new ObservableCollection<ReferenceVectorInfo>();
+        SkMapPoints = new ObservableCollection<SkMapPoint>();
 
         // Команди вкладки 1 (ЛР №12)
         AddImagesCommand = new RelayCommand(ExecuteAddImages);
@@ -70,7 +91,10 @@ public class MainViewModel : INotifyPropertyChanged
         // Команди вкладки 2 (ЛР №13)
         BinarizeCommand = new RelayCommand(ExecuteBinarize);
 
-        Log("Система ІЕІТ ініціалізована. Готова до роботи з ЛР №12 та ЛР №13.");
+        // Команди вкладки 3 (ЛР №14)
+        ComputeDistancesCommand = new RelayCommand(ExecuteComputeDistances);
+
+        Log("Система ІЕІТ ініціалізована. Готова до роботи з ЛР №12, №13 та №14.");
     }
 
     // ==========================================
@@ -654,6 +678,304 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     // ==========================================
+    // ВЛАСТИВОСТІ МОДЕЛІ ДАНИХ ТА СТАНУ (ЛР №14: КОДОВІ ВІДСТАНІ SK)
+    // ==========================================
+
+    /// <summary>
+    /// Ознака того, чи розраховано масиви кодових відстаней SK та SK_PARA.
+    /// </summary>
+    public bool IsDistancesComputed
+    {
+        get => _isDistancesComputed;
+        private set
+        {
+            if (_isDistancesComputed != value)
+            {
+                _isDistancesComputed = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsDistancesPending));
+                OnPropertyChanged(nameof(DistancesStatusText));
+                OnPropertyChanged(nameof(DistancesStatusBrush));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Ознака очікування розрахунку кодових відстаней.
+    /// </summary>
+    public bool IsDistancesPending => !IsDistancesComputed;
+
+    /// <summary>
+    /// Текстовий статус кодових відстаней для відображення в інтерфейсі.
+    /// </summary>
+    public string DistancesStatusText =>
+        IsDistancesComputed
+            ? $"Кодові відстані розраховано! (D={CenterDistanceD})"
+            : (IsBinarized
+                ? "Готово до розрахунку кодових відстаней та побудови карти SK_MAP."
+                : "Очікує виконання бінаризації на вкладці ЛР №13.");
+
+    /// <summary>
+    /// Колір індикатора статусу розрахунку відстаней.
+    /// </summary>
+    public Brush DistancesStatusBrush =>
+        IsDistancesComputed
+            ? new SolidColorBrush(Color.FromRgb(5, 150, 105)) // Зелений
+            : new SolidColorBrush(Color.FromRgb(100, 116, 139)); // Сірий
+
+    /// <summary>
+    /// Індекс обраного класу для перегляду відстаней та карти SK_MAP (0..M-1).
+    /// </summary>
+    public int SelectedDistanceClassIndex
+    {
+        get => _selectedDistanceClassIndex;
+        set
+        {
+            if (_selectedDistanceClassIndex != value)
+            {
+                _selectedDistanceClassIndex = value;
+                OnPropertyChanged();
+                UpdateDistanceViewsForSelectedClass();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Номер знайденого найближчого сусіда PARA[m] (1..M).
+    /// </summary>
+    public int NearestNeighborIndex
+    {
+        get => _nearestNeighborIndex;
+        private set
+        {
+            if (_nearestNeighborIndex != value)
+            {
+                _nearestNeighborIndex = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Назва знайденого найближчого сусіда PARA[m].
+    /// </summary>
+    public string NearestNeighborName
+    {
+        get => _nearestNeighborName;
+        private set
+        {
+            if (_nearestNeighborName != value)
+            {
+                _nearestNeighborName = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Кодова відстань між еталонними центрами поточного класу та його сусіда: D = d_H(EV[m], EV[p]).
+    /// </summary>
+    public int CenterDistanceD
+    {
+        get => _centerDistanceD;
+        private set
+        {
+            if (_centerDistanceD != value)
+            {
+                _centerDistanceD = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(DistancesStatusText));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Прапорець збігу центрів (D == 0), коли карта SK_MAP не може бути геометрично побудована.
+    /// </summary>
+    public bool IsCentersCoincide
+    {
+        get => _isCentersCoincide;
+        private set
+        {
+            if (_isCentersCoincide != value)
+            {
+                _isCentersCoincide = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Зведена статистика Min / Max / Average для масивів SK та SK_PARA обраного класу.
+    /// </summary>
+    public DistanceStatsInfo? DistanceStats
+    {
+        get => _distanceStats;
+        private set
+        {
+            if (_distanceStats != value)
+            {
+                _distanceStats = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Табличне представлення DataView для відображення значень SK та SK_PARA в FastDataGrid.
+    /// </summary>
+    public DataView? DistancesDataView
+    {
+        get => _distancesDataView;
+        private set
+        {
+            if (_distancesDataView != value)
+            {
+                _distancesDataView = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Інформаційний опис поточної таблиці інспектора відстаней.
+    /// </summary>
+    public string DistancesInspectorInfo
+    {
+        get => _distancesInspectorInfo;
+        private set
+        {
+            if (_distancesInspectorInfo != value)
+            {
+                _distancesInspectorInfo = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Колекція точок реалізацій для відображення на двовимірній карті SK_MAP.
+    /// </summary>
+    public ObservableCollection<SkMapPoint> SkMapPoints { get; }
+
+    public double C1CanvasX
+    {
+        get => _c1CanvasX;
+        private set
+        {
+            if (Math.Abs(_c1CanvasX - value) > 0.01)
+            {
+                _c1CanvasX = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public double C1CanvasY
+    {
+        get => _c1CanvasY;
+        private set
+        {
+            if (Math.Abs(_c1CanvasY - value) > 0.01)
+            {
+                _c1CanvasY = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public double C2CanvasX
+    {
+        get => _c2CanvasX;
+        private set
+        {
+            if (Math.Abs(_c2CanvasX - value) > 0.01)
+            {
+                _c2CanvasX = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public double C2CanvasY
+    {
+        get => _c2CanvasY;
+        private set
+        {
+            if (Math.Abs(_c2CanvasY - value) > 0.01)
+            {
+                _c2CanvasY = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public double AxisLineX1
+    {
+        get => _axisLineX1;
+        private set
+        {
+            if (Math.Abs(_axisLineX1 - value) > 0.01)
+            {
+                _axisLineX1 = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public double AxisLineX2
+    {
+        get => _axisLineX2;
+        private set
+        {
+            if (Math.Abs(_axisLineX2 - value) > 0.01)
+            {
+                _axisLineX2 = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public double AxisLineY
+    {
+        get => _axisLineY;
+        private set
+        {
+            if (Math.Abs(_axisLineY - value) > 0.01)
+            {
+                _axisLineY = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public double SkMapScale
+    {
+        get => _skMapScale;
+        private set
+        {
+            if (Math.Abs(_skMapScale - value) > 0.001)
+            {
+                _skMapScale = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string SkMapWorldBoundsText
+    {
+        get => _skMapWorldBoundsText;
+        private set
+        {
+            if (_skMapWorldBoundsText != value)
+            {
+                _skMapWorldBoundsText = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    // ==========================================
     // КОМАНДИ (COMMANDS)
     // ==========================================
 
@@ -663,6 +985,7 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand ClearAllClassesCommand { get; }
     public ICommand FormTrainingMatrixCommand { get; }
     public ICommand BinarizeCommand { get; }
+    public ICommand ComputeDistancesCommand { get; }
 
     // ==========================================
     // РЕАЛІЗАЦІЯ ДІЙ ТА ВАЛІДАЦІЇ (ЛР №12)
@@ -1232,6 +1555,215 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    // ==========================================
+    // РЕАЛІЗАЦІЯ ДІЙ ТА ВАЛІДАЦІЇ (ЛР №14: КОДОВІ ВІДСТАНІ SK)
+    // ==========================================
+
+    private void ExecuteComputeDistances(object? parameter)
+    {
+        if (!IsBinarized || RecognitionObj.M == 0 || RecognitionObj.L == 0 || RecognitionObj.N == 0 ||
+            RecognitionObj.X == null || RecognitionObj.X.Length == 0 ||
+            RecognitionObj.EV == null || RecognitionObj.EV.Length == 0)
+        {
+            MessageBox.Show(
+                "Помилка: Бінаризацію ще не виконано!\n\n" +
+                "Будь ласка, перейдіть на вкладку «ЛР №13: Бінаризація та СКД» та натисніть кнопку «Побудувати СКД та бінаризувати».",
+                "Неможливо виконати розрахунок",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        if (RecognitionObj.M < 2)
+        {
+            MessageBox.Show(
+                "Для визначення найближчих класів (PARA) та розрахунку кодових відстаней необхідно щонайменше 2 класи розпізнавання.\n\n" +
+                $"Поточна кількість класів: m = {RecognitionObj.M}.",
+                "Недостатньо класів",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            int m = RecognitionObj.M;
+            int l = RecognitionObj.L;
+            int n = RecognitionObj.N;
+
+            // 1. Визначення пар найближчих класів-сусідів PARA[m]
+            var para = CodeDistanceService.ComputeNearestNeighbors(RecognitionObj.EV, m, n);
+            RecognitionObj.PARA = para;
+
+            // 2. Розрахунок масивів кодових відстаней SK та SK_PARA [M][2][L]
+            var (sk, skPara) = CodeDistanceService.ComputeAllCodeDistances(RecognitionObj.X, RecognitionObj.EV, para, m, l, n);
+            RecognitionObj.SK = sk;
+            RecognitionObj.SK_PARA = skPara;
+
+            IsDistancesComputed = true;
+
+            if (SelectedDistanceClassIndex >= m || SelectedDistanceClassIndex < 0)
+            {
+                SelectedDistanceClassIndex = 0;
+            }
+
+            UpdateDistanceViewsForSelectedClass();
+
+            Log($"[ЛР №14: Кодові відстані] Розраховано відстані SK та SK_PARA для {m} класів (l = {l}, N = {n}).");
+            for (int c = 0; c < m; c++)
+            {
+                int p = para[c];
+                int d = CodeDistanceService.ComputeHammingDistance(RecognitionObj.EV[c], RecognitionObj.EV[p]);
+                string nameC = (LoadedClasses.Count > c) ? LoadedClasses[c].ClassName : $"Клас {c + 1}";
+                string nameP = (LoadedClasses.Count > p) ? LoadedClasses[p].ClassName : $"Клас {p + 1}";
+                Log($"   • {nameC}: найближчий сусід = {nameP} (індекс {p + 1}), D = {d}.");
+            }
+
+            int cur = SelectedDistanceClassIndex;
+            int curP = para[cur];
+            int curD = CodeDistanceService.ComputeHammingDistance(RecognitionObj.EV[cur], RecognitionObj.EV[curP]);
+            string curName = (LoadedClasses.Count > cur) ? LoadedClasses[cur].ClassName : $"Клас {cur + 1}";
+            string curNeighborName = (LoadedClasses.Count > curP) ? LoadedClasses[curP].ClassName : $"Клас {curP + 1}";
+
+            if (curD == 0)
+            {
+                MessageBox.Show(
+                    $"Розрахунок кодових відстаней SK та SK_PARA завершено!\n\n" +
+                    $"• Поточний клас: {curName}\n" +
+                    $"• Найближчий сусід: {curNeighborName}\n" +
+                    $"• Відстань між центрами D = 0 (центри еталонів повністю збіглися).\n\n" +
+                    $"Таблицю відстаней та статистику сформовано. Побудову карти SK_MAP заблоковано через нульову відстань між центрами.\n" +
+                    $"Порада: зменшіть крок допуску δ на вкладці ЛР №13.",
+                    "Кодові відстані розраховано (D = 0)",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+            else
+            {
+                MessageBox.Show(
+                    $"Масиви кодових відстаней SK та карту SK_MAP успішно сформовано!\n\n" +
+                    $"• Поточний клас: {curName}\n" +
+                    $"• Найближчий сусід (PARA): {curNeighborName}\n" +
+                    $"• Відстань між еталонами D = {curD}\n" +
+                    $"• Кількість реалізацій образу l = {l}\n\n" +
+                    $"Праворуч оновлено карту розподілу реалізацій SK_MAP та таблицю інспектора значень SK / SK_PARA.",
+                    "Кодові відстані та SK_MAP сформовано",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            IsDistancesComputed = false;
+            Log($"[Помилка кодових відстаней] {ex.Message}");
+            MessageBox.Show($"Помилка розрахунку кодових відстаней: {ex.Message}", "Помилка", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void UpdateDistanceViewsForSelectedClass()
+    {
+        if (!IsDistancesComputed || RecognitionObj.M == 0 || RecognitionObj.L == 0 ||
+            SelectedDistanceClassIndex < 0 || SelectedDistanceClassIndex >= RecognitionObj.M ||
+            RecognitionObj.PARA == null || RecognitionObj.PARA.Length == 0 ||
+            RecognitionObj.SK == null || RecognitionObj.SK.Length == 0)
+        {
+            DistanceStats = null;
+            DistancesDataView = null;
+            SkMapPoints.Clear();
+            CenterDistanceD = 0;
+            IsCentersCoincide = false;
+            NearestNeighborName = "Ще не визначено";
+            DistancesInspectorInfo = "Оберіть клас та розрахуйте кодові відстані для перегляду.";
+            return;
+        }
+
+        try
+        {
+            int m = SelectedDistanceClassIndex;
+            int p = RecognitionObj.PARA[m];
+            int l = RecognitionObj.L;
+
+            NearestNeighborIndex = p + 1;
+            NearestNeighborName = (LoadedClasses.Count > p) ? LoadedClasses[p].ClassName : $"Клас {p + 1}";
+            string currentName = (LoadedClasses.Count > m) ? LoadedClasses[m].ClassName : $"Клас {m + 1}";
+
+            int d = CodeDistanceService.ComputeHammingDistance(RecognitionObj.EV[m], RecognitionObj.EV[p]);
+            CenterDistanceD = d;
+            IsCentersCoincide = (d == 0);
+
+            // Статистика Min, Max, Avg для поточного класу та його сусіда
+            DistanceStats = CodeDistanceService.ComputeClassPairStats(
+                RecognitionObj.SK[m],
+                RecognitionObj.SK_PARA[m],
+                d,
+                m,
+                p,
+                currentName,
+                NearestNeighborName,
+                l);
+
+            // Таблиця DataView для FastDataGrid
+            var table = CodeDistanceService.CreateDataTableForDistances(
+                RecognitionObj.SK[m],
+                RecognitionObj.SK_PARA[m],
+                l);
+            DistancesDataView = table.DefaultView;
+
+            DistancesInspectorInfo = $"Масив кодових відстаней для класу #{m + 1} («{currentName}») та його найближчого сусіда #{p + 1} («{NearestNeighborName}»): {l} рядків-реалізацій.";
+
+            // Побудова карти SK_MAP
+            SkMapPoints.Clear();
+
+            if (IsCentersCoincide)
+            {
+                SkMapWorldBoundsText = "Центри класів збіглися (D = 0). Геометрична проєкція неможлива.";
+            }
+            else
+            {
+                var rawPoints = CodeDistanceService.ComputeSkMapPoints(
+                    RecognitionObj.SK[m],
+                    RecognitionObj.SK_PARA[m],
+                    d,
+                    m,
+                    p,
+                    currentName,
+                    NearestNeighborName,
+                    l);
+
+                double canvasWidth = 720.0;
+                double canvasHeight = 280.0;
+
+                var (c1X, c1Y, c2X, c2Y, scale, bounds) = CodeDistanceService.TransformPointsToCanvas(
+                    rawPoints,
+                    d,
+                    canvasWidth,
+                    canvasHeight,
+                    0.12);
+
+                C1CanvasX = c1X;
+                C1CanvasY = c1Y;
+                C2CanvasX = c2X;
+                C2CanvasY = c2Y;
+                SkMapScale = scale;
+
+                AxisLineX1 = 30.0;
+                AxisLineX2 = canvasWidth - 30.0;
+                AxisLineY = c1Y;
+
+                SkMapWorldBoundsText = $"Межі: X=[{bounds.Left:F1}..{bounds.Right:F1}], Y=[{bounds.Top:F1}..{bounds.Bottom:F1}] | Масштаб: 1:{1.0 / scale:F2} ({scale:F2} px/од.) | D = {d}";
+
+                foreach (var pt in rawPoints)
+                {
+                    SkMapPoints.Add(pt);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"[Помилка оновлення відображення відстаней] {ex.Message}");
+        }
+    }
+
     private void ResetBinarizationState()
     {
         IsBinarized = false;
@@ -1245,6 +1777,17 @@ public class MainViewModel : INotifyPropertyChanged
         SelectedBinaryClassInfo = "Бінаризацію ще не виконано.";
         SelectedBinaryOnesCount = 0;
         SelectedBinaryOnesPercentage = 0.0;
+
+        // Скидання стану ЛР №14
+        IsDistancesComputed = false;
+        DistancesDataView = null;
+        DistanceStats = null;
+        SkMapPoints.Clear();
+        CenterDistanceD = 0;
+        IsCentersCoincide = false;
+        NearestNeighborName = "Ще не визначено";
+        DistancesInspectorInfo = "Бінаризацію оновлено. Виконайте розрахунок кодових відстаней.";
+
         NotifyCountersChanged();
     }
 
