@@ -67,6 +67,7 @@ public class MainViewModel : INotifyPropertyChanged
     private double _axisLineX1 = 30.0;
     private double _axisLineX2 = 690.0;
     private double _axisLineY = 140.0;
+    private double _axisLabelCanvasX = 270.0;
     private double _skMapScale = 1.0;
     private string _skMapWorldBoundsText = string.Empty;
 
@@ -949,6 +950,19 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public double AxisLabelCanvasX
+    {
+        get => _axisLabelCanvasX;
+        private set
+        {
+            if (Math.Abs(_axisLabelCanvasX - value) > 0.01)
+            {
+                _axisLabelCanvasX = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public double SkMapScale
     {
         get => _skMapScale;
@@ -1749,6 +1763,7 @@ public class MainViewModel : INotifyPropertyChanged
                 AxisLineX1 = 30.0;
                 AxisLineX2 = canvasWidth - 30.0;
                 AxisLineY = c1Y;
+                AxisLabelCanvasX = (c1X + c2X) / 2.0 - 85.0;
 
                 SkMapWorldBoundsText = $"Межі: X=[{bounds.Left:F1}..{bounds.Right:F1}], Y=[{bounds.Top:F1}..{bounds.Bottom:F1}] | Масштаб: 1:{1.0 / scale:F2} ({scale:F2} px/од.) | D = {d}";
 

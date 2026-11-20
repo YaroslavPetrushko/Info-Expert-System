@@ -189,11 +189,17 @@ public class CodeDistanceService
     {
         var table = new DataTable("DistancesInspectorTable");
 
-        table.Columns.Add("Реалізація", typeof(string));
-        table.Columns.Add("SK[1] (свій → C1)", typeof(int));
-        table.Columns.Add("SK[2] (сусід → C1)", typeof(int));
-        table.Columns.Add("SK_PARA[1] (сусід → C2)", typeof(int));
-        table.Columns.Add("SK_PARA[2] (свій → C2)", typeof(int));
+        table.Columns.Add("Realization", typeof(string));
+        table.Columns.Add("SK_1", typeof(int));
+        table.Columns.Add("SK_2", typeof(int));
+        table.Columns.Add("SK_PARA_1", typeof(int));
+        table.Columns.Add("SK_PARA_2", typeof(int));
+
+        table.Columns["Realization"]!.Caption = "Реалізація";
+        table.Columns["SK_1"]!.Caption = "SK[1] (свій → C1)";
+        table.Columns["SK_2"]!.Caption = "SK[2] (сусід → C1)";
+        table.Columns["SK_PARA_1"]!.Caption = "SK_PARA[1] (сусід → C2)";
+        table.Columns["SK_PARA_2"]!.Caption = "SK_PARA[2] (свій → C2)";
 
         for (int j = 0; j < l; j++)
         {

@@ -1342,19 +1342,15 @@
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                         <Path Data="{StaticResource IconList}" Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
                                               Stroke="#2563EB" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" />
-                                        <TextBlock Text="Журнал подій" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                        <TextBlock Text="Журнал подій та валідації" FontSize="13" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
                                     </StackPanel>
-
-                                    <Border Background="#0F172A" CornerRadius="6" Padding="8" Height="130">
-                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                            <ItemsControl ItemsSource="{Binding LogMessages}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding}" Foreground="#E2E8F0" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Margin="0,1" />
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </ScrollViewer>
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Height="130">
+                                        <ListBox ItemsSource="{Binding LogMessages}"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 FontSize="11"
+                                                 FontFamily="Consolas"
+                                                 Foreground="#334155" />
                                     </Border>
                                 </StackPanel>
                             </Border>
@@ -1432,7 +1428,7 @@
                                             </Border>
 
                                             <!-- State 3: Active Canvas when D > 0 -->
-                                            <Viewbox Stretch="Fill" Height="280"
+                                            <Viewbox Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                      Visibility="{Binding IsDistancesComputed, Converter={StaticResource BoolToVisConverter}}">
                                                 <Canvas Width="720" Height="280" Background="Transparent" ClipToBounds="True">
                                                     <!-- Axis line connecting centers through Y = AxisLineY -->
@@ -1441,7 +1437,7 @@
                                                           Stroke="#94A3B8" StrokeThickness="1.5" StrokeDashArray="4,4" />
 
                                                     <TextBlock Text="Горизонтальна вісь центрів (y = 0)"
-                                                               Canvas.Left="265" Canvas.Top="{Binding AxisLineY}"
+                                                               Canvas.Left="{Binding AxisLabelCanvasX}" Canvas.Top="{Binding AxisLineY}"
                                                                Margin="0,4,0,0" FontSize="10" Foreground="#64748B" FontWeight="Medium" />
 
                                                     <!-- Center C1(0, 0) Marker -->
@@ -1525,7 +1521,7 @@
                                     <!-- FastDataGrid for Distances -->
                                     <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Background="White">
                                         <controls:FastDataGrid ItemsSource="{Binding DistancesDataView}"
-                                                              AutoGenerateColumns="True"
+                                                              AutoGenerateColumns="False"
                                                               IsReadOnly="True"
                                                               CanUserAddRows="False"
                                                               CanUserDeleteRows="False"
@@ -1536,9 +1532,65 @@
                                                               GridLinesVisibility="All"
                                                               HorizontalGridLinesBrush="#F1F5F9"
                                                               VerticalGridLinesBrush="#F1F5F9"
-                                                              RowHeight="24"
+                                                              RowHeight="25"
+                                                              ColumnHeaderHeight="30"
                                                               FontSize="12"
-                                                              BorderThickness="0" />
+                                                              BorderThickness="0">
+                                            <controls:FastDataGrid.Columns>
+                                                <DataGridTextColumn Header="Реалізація" Binding="{Binding Realization}" Width="100">
+                                                    <DataGridTextColumn.ElementStyle>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="HorizontalAlignment" Value="Center" />
+                                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                            <Setter Property="Foreground" Value="#334155" />
+                                                        </Style>
+                                                    </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+
+                                                <DataGridTextColumn Header="SK[1] (свій → C1)" Binding="{Binding SK_1}" Width="*">
+                                                    <DataGridTextColumn.ElementStyle>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="HorizontalAlignment" Value="Center" />
+                                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                                            <Setter Property="FontWeight" Value="Medium" />
+                                                            <Setter Property="Foreground" Value="#1E40AF" />
+                                                        </Style>
+                                                    </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+
+                                                <DataGridTextColumn Header="SK[2] (сусід → C1)" Binding="{Binding SK_2}" Width="*">
+                                                    <DataGridTextColumn.ElementStyle>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="HorizontalAlignment" Value="Center" />
+                                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                                            <Setter Property="Foreground" Value="#334155" />
+                                                        </Style>
+                                                    </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+
+                                                <DataGridTextColumn Header="SK_PARA[1] (сусід → C2)" Binding="{Binding SK_PARA_1}" Width="*">
+                                                    <DataGridTextColumn.ElementStyle>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="HorizontalAlignment" Value="Center" />
+                                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                                            <Setter Property="FontWeight" Value="Medium" />
+                                                            <Setter Property="Foreground" Value="#9A3412" />
+                                                        </Style>
+                                                    </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+
+                                                <DataGridTextColumn Header="SK_PARA[2] (свій → C2)" Binding="{Binding SK_PARA_2}" Width="*">
+                                                    <DataGridTextColumn.ElementStyle>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="HorizontalAlignment" Value="Center" />
+                                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                                            <Setter Property="Foreground" Value="#334155" />
+                                                        </Style>
+                                                    </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+                                            </controls:FastDataGrid.Columns>
+                                        </controls:FastDataGrid>
                                     </Border>
                                 </Grid>
                             </Border>
