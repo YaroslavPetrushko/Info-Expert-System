@@ -1245,14 +1245,14 @@
 
                 <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="340" />
-                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="380" MinWidth="320" MaxWidth="540" />
+                        <ColumnDefinition Width="10" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
                     <!-- LEFT PANEL: CONTROLS, PARAMS & STATS -->
-                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
+                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="0,0,6,0">
 
                             <!-- Prerequisite Alert when Y or Binarization not done -->
                             <Border Background="#FEF3C7" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12"
@@ -1448,19 +1448,26 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <!-- RIGHT PANEL: SK_MAP MODULE & DISTANCES INSPECTOR -->
-                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
+                    <!-- VERTICAL GRID SPLITTER -->
+                    <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" Background="#CBD5E1" ShowsPreview="True" />
 
-                            <!-- BLOCK A: SK_MAP 2D VISUALIZATION CANVAS -->
-                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,12">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
+                    <!-- RIGHT COLUMN: SK_MAP MODULE (TOP) & DISTANCES INSPECTOR (BOTTOM) -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="390" MinHeight="220" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="*" MinHeight="200" />
+                        </Grid.RowDefinitions>
+
+                        <!-- BLOCK A: SK_MAP 2D VISUALIZATION CANVAS -->
+                        <Border Grid.Row="0" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" MinHeight="160" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
 
                                     <!-- Header and Legends -->
                                     <Grid Grid.Row="0" Margin="0,0,0,8">
@@ -1495,7 +1502,7 @@
                                     </Grid>
 
                                     <!-- Canvas Drawing Area -->
-                                    <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Background="#F8FAFC" Height="285">
+                                    <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Background="#F8FAFC">
                                         <Grid>
                                             <!-- State 1: Pending calculation -->
                                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
@@ -1673,16 +1680,19 @@
                                         </Grid>
                                     </Border>
                                 </Grid>
-                            </Border>
+                        </Border>
 
-                            <!-- BLOCK B: DISTANCES INSPECTOR (FastDataGrid) -->
-                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,12">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="240" />
-                                    </Grid.RowDefinitions>
+                        <!-- HORIZONTAL SPLITTER -->
+                        <GridSplitter Grid.Row="1" Height="4" HorizontalAlignment="Stretch" Background="#CBD5E1" ShowsPreview="True" />
+
+                        <!-- BLOCK B: DISTANCES INSPECTOR (FastDataGrid) -->
+                        <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" MinHeight="140" />
+                                </Grid.RowDefinitions>
 
                                     <!-- Controls Bar -->
                                     <Grid Grid.Row="0" Margin="0,0,0,8">
@@ -1779,10 +1789,8 @@
                                         </controls:FastDataGrid>
                                     </Border>
                                 </Grid>
-                            </Border>
-
-                        </StackPanel>
-                    </ScrollViewer>
+                        </Border>
+                    </Grid>
                 </Grid>
             </TabItem>
 
